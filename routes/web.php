@@ -2,13 +2,15 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\FamilyController;
 use App\Http\Controllers\OfferController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Middleware\AuthMiddleware;
 use App\Http\Middleware\CsrfMiddleware;
 
 return [
-    ['GET', '/', [[AuthMiddleware::class, 'optional'], [CsrfMiddleware::class, 'generate']], [CalendarController::class, 'index']],
+    ['GET', '/', [[CsrfMiddleware::class, 'generate']], [FamilyController::class, 'show']],
+    ['GET', '/kalender', [[AuthMiddleware::class, 'optional'], [CsrfMiddleware::class, 'generate']], [CalendarController::class, 'index']],
     ['GET', '/login', [[CsrfMiddleware::class, 'generate']], [AuthController::class, 'showLoginForm']],
     ['POST', '/login', [[CsrfMiddleware::class, 'verify']], [AuthController::class, 'login']],
     ['POST', '/logout', [[CsrfMiddleware::class, 'verify'], [AuthMiddleware::class, 'handle']], [AuthController::class, 'logout']],
