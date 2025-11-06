@@ -30,7 +30,7 @@
         </ul>
     </nav>
     <div class="hero__content">
-        <img class="hero__crest" src="/images/family-crest.svg" alt="Familienwappen Bazynski">
+        <img class="hero__crest" src="/images/family-crest.png" alt="Familienwappen Bazynski">
         <div class="hero__text">
             <p class="hero__subtitle">Willkommen auf Familie-Bazynski.de</p>
             <h1>Gemeinsam unterwegs – mit Herz, Haltung und Tatkraft</h1>
@@ -222,7 +222,7 @@
 <footer class="site-footer">
     <div class="site-footer__content">
         <div>
-            <img src="/images/family-crest.svg" alt="Familienwappen Bazynski" class="site-footer__crest">
+            <img src="/images/family-crest.png" alt="Familienwappen Bazynski" class="site-footer__crest">
             <p>&copy; <?= date('Y') ?> Familie Bazynski. Alle Rechte vorbehalten.</p>
         </div>
         <div class="site-footer__links">
