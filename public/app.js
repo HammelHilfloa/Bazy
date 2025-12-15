@@ -24,10 +24,14 @@ const months = [
   'Dezember',
 ];
 
-const STORAGE_KEY = 'kalender-2026-events';
+const API_BASE = '../api';
+const YEAR = 2026;
+
 let events = [];
-let activeMonth = 0; // 0-based
+let holidays = [];
+let activeMonth = 0;
 let editingId = null;
+let csrfToken = null;
 
 const monthSelect = document.getElementById('month-select');
 const filterSelect = document.getElementById('filter-category');
@@ -44,6 +48,14 @@ const downloadBtn = document.getElementById('btn-download');
 const eventList = document.getElementById('event-list');
 const legend = document.querySelector('.legend');
 const yearPrint = document.getElementById('year-print');
+const toast = document.getElementById('toast');
+
+function showToast(message, variant = 'info') {
+  toast.textContent = message;
+  toast.dataset.variant = variant;
+  toast.classList.add('toast--visible');
+  setTimeout(() => toast.classList.remove('toast--visible'), 3000);
+}
 
 function parseDateString(value) {
   const [year, month, day] = value.split('-').map(Number);
@@ -63,16 +75,14 @@ function daysInMonth(year, monthIndex) {
 
 function weekdayLabel(year, monthIndex, day) {
   const date = new Date(year, monthIndex, day);
-  return date
-    .toLocaleDateString('de-DE', { weekday: 'short' })
-    .replace('.', '');
+  return date.toLocaleDateString('de-DE', { weekday: 'short' }).replace('.', '');
 }
 
 function renderMonthSelect() {
   months.forEach((name, index) => {
     const option = document.createElement('option');
     option.value = index;
-    option.textContent = `${name} 2026`;
+    option.textContent = `${name} ${YEAR}`;
     monthSelect.appendChild(option);
   });
   monthSelect.value = activeMonth.toString();
@@ -89,7 +99,7 @@ function renderCategorySelects() {
 }
 
 function getColorPalette() {
-  const palette = {
+  return {
     U11: '#1D4ED8',
     U13: '#0EA5E9',
     U15: '#16A34A',
@@ -99,7 +109,6 @@ function getColorPalette() {
     'Trainingsschwerpunkt Jugend': '#14B8A6',
     'Trainingsschwerpunkt Senioren': '#8B5CF6',
   };
-  return palette;
 }
 
 function renderLegend() {
@@ -117,31 +126,40 @@ function renderLegend() {
   });
 }
 
-function saveEvents() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
-  renderEventList();
+async function fetchCsrfToken() {
+  try {
+    const response = await fetch(`${API_BASE}/csrf.php`, { credentials: 'same-origin' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    csrfToken = data.token;
+  } catch (error) {
+    showToast('CSRF Token konnte nicht geladen werden.', 'error');
+    console.error(error);
+  }
 }
 
 async function loadEvents() {
-  let jsonEvents = [];
   try {
-    const response = await fetch('events-2026.json');
-    jsonEvents = await response.json();
+    const response = await fetch(`${API_BASE}/events.php`, { credentials: 'same-origin' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    events = await response.json();
+    renderEventList();
+    renderMonth(activeMonth);
   } catch (error) {
-    console.error('JSON konnte nicht geladen werden', error);
+    showToast('Events konnten nicht geladen werden.', 'error');
+    console.error(error);
   }
+}
 
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    try {
-      events = JSON.parse(stored);
-    } catch (error) {
-      console.error('Lokale Daten defekt, nutze JSON-Datei', error);
-      events = jsonEvents;
-    }
-  } else {
-    events = jsonEvents;
-    saveEvents();
+async function loadHolidays() {
+  try {
+    const response = await fetch(`${API_BASE}/holidays.php`, { credentials: 'same-origin' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    holidays = await response.json();
+    renderMonth(activeMonth);
+  } catch (error) {
+    showToast('Feiertage/Ferien konnten nicht geladen werden.', 'error');
+    console.error(error);
   }
 }
 
@@ -165,12 +183,46 @@ function createEventElement(event, dateText) {
   return el;
 }
 
+function buildHolidayRow(daysCount, monthIndex, forPrint = false) {
+  const row = document.createElement('tr');
+  row.className = 'holiday-row';
+  const header = document.createElement('th');
+  header.textContent = 'Ferien / Feiertage';
+  row.appendChild(header);
+
+  for (let day = 1; day <= daysCount; day++) {
+    const dateText = formatDate(new Date(YEAR, monthIndex, day));
+    const cell = document.createElement('td');
+    cell.dataset.date = dateText;
+    cell.className = 'holiday-cell';
+
+    const relevant = holidays.filter((item) => {
+      const start = parseDateString(item.start);
+      const end = parseDateString(item.end);
+      const current = parseDateString(dateText);
+      return current >= start && current <= end;
+    });
+
+    relevant.forEach((item) => {
+      const badge = document.createElement('span');
+      badge.className = `holiday-chip holiday-chip--${item.type}`;
+      badge.textContent = item.name;
+      if (forPrint) badge.classList.add('holiday-chip--print');
+      cell.appendChild(badge);
+    });
+
+    row.appendChild(cell);
+  }
+
+  return row;
+}
+
 function renderMonth(monthIndex = activeMonth) {
   activeMonth = monthIndex;
-  monthTitle.textContent = `${months[monthIndex]} 2026`;
+  monthTitle.textContent = `${months[monthIndex]} ${YEAR}`;
   monthSelect.value = monthIndex.toString();
 
-  const daysCount = daysInMonth(2026, monthIndex);
+  const daysCount = daysInMonth(YEAR, monthIndex);
   calendarTable.innerHTML = '';
 
   const thead = document.createElement('thead');
@@ -179,13 +231,15 @@ function renderMonth(monthIndex = activeMonth) {
 
   for (let day = 1; day <= daysCount; day++) {
     const th = document.createElement('th');
-    th.textContent = `${day} ${weekdayLabel(2026, monthIndex, day)}`;
+    th.textContent = `${day} ${weekdayLabel(YEAR, monthIndex, day)}`;
     headerRow.appendChild(th);
   }
   thead.appendChild(headerRow);
   calendarTable.appendChild(thead);
 
   const tbody = document.createElement('tbody');
+  tbody.appendChild(buildHolidayRow(daysCount, monthIndex));
+
   const filter = filterSelect.value;
   const visibleCategories = filter === 'all' ? categories : [filter];
 
@@ -196,7 +250,7 @@ function renderMonth(monthIndex = activeMonth) {
     row.appendChild(header);
 
     for (let day = 1; day <= daysCount; day++) {
-      const dateText = formatDate(new Date(2026, monthIndex, day));
+      const dateText = formatDate(new Date(YEAR, monthIndex, day));
       const cell = document.createElement('td');
       cell.dataset.date = dateText;
       cell.dataset.category = cat;
@@ -221,7 +275,7 @@ function placeEventsInMonth(monthIndex) {
     for (let offset = 0; offset <= duration; offset++) {
       const current = new Date(start);
       current.setDate(start.getDate() + offset);
-      if (current.getFullYear() !== 2026 || current.getMonth() !== monthIndex) continue;
+      if (current.getFullYear() !== YEAR || current.getMonth() !== monthIndex) continue;
       if (filter !== 'all' && evt.category !== filter) continue;
       const dateText = formatDate(current);
       const selector = `td[data-date="${dateText}"][data-category="${evt.category}"]`;
@@ -293,7 +347,7 @@ function onDropOnCell(ev) {
   evt.startDate = formatDate(newStart);
   evt.endDate = formatDate(newEnd);
   renderMonth(activeMonth);
-  saveEvents();
+  persistEvents();
 }
 
 function handleFormSubmit(ev) {
@@ -327,7 +381,7 @@ function handleFormSubmit(ev) {
   }
 
   renderMonth(activeMonth);
-  saveEvents();
+  persistEvents();
   resetForm();
 }
 
@@ -352,7 +406,7 @@ function buildMonthTable(monthIndex) {
   const container = document.createElement('div');
   container.className = 'year-print__month';
   const title = document.createElement('h3');
-  title.textContent = `${months[monthIndex]} 2026`;
+  title.textContent = `${months[monthIndex]} ${YEAR}`;
   container.appendChild(title);
 
   const table = document.createElement('table');
@@ -361,16 +415,18 @@ function buildMonthTable(monthIndex) {
   const thead = document.createElement('thead');
   const headerRow = document.createElement('tr');
   headerRow.appendChild(document.createElement('th')).textContent = 'Kategorie';
-  const days = daysInMonth(2026, monthIndex);
+  const days = daysInMonth(YEAR, monthIndex);
   for (let day = 1; day <= days; day++) {
     const th = document.createElement('th');
-    th.textContent = `${day} ${weekdayLabel(2026, monthIndex, day)}`;
+    th.textContent = `${day} ${weekdayLabel(YEAR, monthIndex, day)}`;
     headerRow.appendChild(th);
   }
   thead.appendChild(headerRow);
   table.appendChild(thead);
 
   const tbody = document.createElement('tbody');
+  tbody.appendChild(buildHolidayRow(days, monthIndex, true));
+
   categories.forEach((cat) => {
     const row = document.createElement('tr');
     const header = document.createElement('th');
@@ -378,7 +434,7 @@ function buildMonthTable(monthIndex) {
     row.appendChild(header);
 
     for (let day = 1; day <= days; day++) {
-      const dateText = formatDate(new Date(2026, monthIndex, day));
+      const dateText = formatDate(new Date(YEAR, monthIndex, day));
       const cell = document.createElement('td');
       cell.dataset.date = dateText;
       cell.dataset.category = cat;
@@ -401,7 +457,7 @@ function fillEventsForTable(table, monthIndex) {
     for (let offset = 0; offset <= duration; offset++) {
       const current = new Date(start);
       current.setDate(start.getDate() + offset);
-      if (current.getFullYear() !== 2026 || current.getMonth() !== monthIndex) continue;
+      if (current.getFullYear() !== YEAR || current.getMonth() !== monthIndex) continue;
       const selector = `td[data-date="${formatDate(current)}"][data-category="${evt.category}"]`;
       const cell = table.querySelector(selector);
       if (cell) {
@@ -431,6 +487,30 @@ function printYear() {
   document.body.dataset.printMode = 'month';
 }
 
+async function persistEvents() {
+  renderEventList();
+  try {
+    if (!csrfToken) await fetchCsrfToken();
+    const response = await fetch(`${API_BASE}/events.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken || '',
+      },
+      credentials: 'same-origin',
+      body: JSON.stringify(events),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    showToast('Änderungen gespeichert.', 'success');
+  } catch (error) {
+    showToast('Speichern fehlgeschlagen. Bitte erneut versuchen.', 'error');
+    console.error(error);
+  }
+}
+
 function initEventHandlers() {
   monthSelect.addEventListener('change', (e) => renderMonth(Number(e.target.value)));
   filterSelect.addEventListener('change', () => renderMonth(activeMonth));
@@ -441,7 +521,7 @@ function initEventHandlers() {
     if (!editingId) return;
     events = events.filter((evt) => evt.id !== editingId);
     resetForm();
-    saveEvents();
+    persistEvents();
     renderMonth(activeMonth);
   });
   downloadBtn.addEventListener('click', downloadJson);
@@ -454,9 +534,8 @@ async function bootstrap() {
   renderCategorySelects();
   renderLegend();
   resetForm();
-  await loadEvents();
-  renderEventList();
-  renderMonth(activeMonth);
+  await fetchCsrfToken();
+  await Promise.all([loadEvents(), loadHolidays()]);
   initEventHandlers();
 }
 

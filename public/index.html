@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vereinskalender 2026</title>
-  <link rel="stylesheet" href="arctic-theme.css" />
-  <script defer src="main.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="app.js"></script>
 </head>
 <body class="th-bg-page">
   <header class="th-header">
@@ -36,7 +36,7 @@
           <button id="btn-print-year" class="th-btn th-btn-secondary">Ganzes Jahr drucken</button>
         </div>
       </div>
-      <p class="th-text-muted info-hint">Termine kommen aus <code>events-2026.json</code> und werden lokal gespeichert, sobald Sie Änderungen vornehmen. Drag &amp; Drop verschiebt den gesamten Terminzeitraum.</p>
+      <p class="th-text-muted info-hint">Alle Daten liegen serverseitig in <code>data/events_2026.json</code>. Änderungen werden sofort gespeichert, Drag &amp; Drop verschiebt komplette Terminblöcke.</p>
     </section>
 
     <section class="layout">
@@ -101,5 +101,7 @@
 
     <section id="year-print" class="year-print"></section>
   </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

@@ -534,6 +534,45 @@ p {
   display: inline-block;
 }
 
+.holiday-row th {
+  background-color: #eef6ff;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.holiday-cell {
+  background-color: #f7fbff;
+  min-height: 24px;
+  padding: 0.2rem 0.35rem;
+}
+
+.holiday-chip {
+  display: inline-block;
+  padding: 0.15rem 0.35rem;
+  margin: 0 0.15rem 0.2rem 0;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: #0f172a;
+  background-color: #e0f2fe;
+}
+
+.holiday-chip--holiday {
+  background-color: #dbeafe;
+  border: 1px solid #bfdbfe;
+}
+
+.holiday-chip--school_holiday {
+  background-color: #ecfccb;
+  border: 1px solid #bef264;
+}
+
+.holiday-chip--print {
+  box-shadow: none;
+  color: #0f172a;
+}
+
 .event-form {
   display: grid;
   gap: 0.75rem;
@@ -617,6 +656,35 @@ p {
 
 .th-btn {
   gap: 0.35rem;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%) translateY(30px);
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  background: #0f4c81;
+  color: #fff;
+  box-shadow: 0 12px 25px rgba(15, 76, 129, 0.2);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.toast[data-variant="error"] {
+  background: #dc2626;
+}
+
+.toast[data-variant="success"] {
+  background: #16a34a;
+}
+
+.toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 /* =========================
