@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vereinskalender 2026</title>
+  <link rel="stylesheet" href="arctic-theme.css" />
+  <script defer src="main.js"></script>
+</head>
+<body class="th-bg-page">
+  <header class="th-header">
+    <div class="th-header__title">Kalender 2026</div>
+    <nav class="th-header__nav" aria-label="Navigation">
+      <span class="th-header__nav-link">Drag &amp; Drop</span>
+      <span class="th-header__nav-link">JSON-basiert</span>
+      <span class="th-header__live-pill">A4 Querformat</span>
+    </nav>
+  </header>
+
+  <main class="th-container th-mt-md">
+    <section class="th-bg-surface th-border th-mb-md control-panel">
+      <div class="control-row">
+        <div class="control-group">
+          <label for="month-select">Monat wählen</label>
+          <select id="month-select" class="control-input"></select>
+        </div>
+        <div class="control-group">
+          <label for="filter-category">Kategorie filtern</label>
+          <select id="filter-category" class="control-input">
+            <option value="all">Alle Kategorien</option>
+          </select>
+        </div>
+        <div class="control-buttons">
+          <button id="btn-add-fresh" class="th-btn">Neu anlegen</button>
+          <button id="btn-print-month" class="th-btn th-btn-secondary">Monat drucken</button>
+          <button id="btn-print-year" class="th-btn th-btn-secondary">Ganzes Jahr drucken</button>
+        </div>
+      </div>
+      <p class="th-text-muted info-hint">Termine kommen aus <code>events-2026.json</code> und werden lokal gespeichert, sobald Sie Änderungen vornehmen. Drag &amp; Drop verschiebt den gesamten Terminzeitraum.</p>
+    </section>
+
+    <section class="layout">
+      <div class="calendar-area th-bg-surface th-border">
+        <div class="th-flex-between th-mb-md">
+          <div>
+            <p class="th-text-muted">Jahr 2026</p>
+            <h2 id="month-title">Januar 2026</h2>
+          </div>
+          <div class="legend" aria-label="Farblegende"></div>
+        </div>
+        <div class="calendar-wrapper">
+          <table id="calendar-table" class="calendar-table" aria-label="Monatskalender"></table>
+        </div>
+      </div>
+
+      <aside class="form-panel th-bg-surface th-border">
+        <h3 id="form-title">Termin hinzufügen</h3>
+        <form id="event-form" class="event-form">
+          <label for="title">Titel</label>
+          <input id="title" name="title" type="text" required />
+
+          <label for="description">Beschreibung</label>
+          <textarea id="description" name="description" rows="3"></textarea>
+
+          <div class="two-col">
+            <div>
+              <label for="start-date">Beginn</label>
+              <input id="start-date" name="start-date" type="date" required />
+            </div>
+            <div>
+              <label for="end-date">Ende</label>
+              <input id="end-date" name="end-date" type="date" required />
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div>
+              <label for="category">Kategorie</label>
+              <select id="category" name="category" required></select>
+            </div>
+            <div>
+              <label for="color">Farbe</label>
+              <input id="color" name="color" type="color" value="#0F4C81" />
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="th-btn">Speichern</button>
+            <button type="button" id="btn-reset" class="th-btn th-btn-secondary">Zurücksetzen</button>
+            <button type="button" id="btn-delete" class="th-btn th-btn-danger" aria-live="polite">Löschen</button>
+          </div>
+        </form>
+
+        <div class="event-list th-mt-md">
+          <h4>Alle Termine</h4>
+          <ul id="event-list" class="event-list__items"></ul>
+          <button id="btn-download" class="th-btn th-btn-secondary">Aktuelle JSON herunterladen</button>
+        </div>
+      </aside>
+    </section>
+
+    <section id="year-print" class="year-print"></section>
+  </main>
+</body>
+</html>
