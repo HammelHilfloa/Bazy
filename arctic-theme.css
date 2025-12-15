@@ -1,0 +1,393 @@
+/* arctic-theme.css
+ * Turnierhub – Arctic Blue & White Theme
+ */
+
+/* =========================
+   Farb-Variablen
+   ========================= */
+
+:root {
+  /* Brand / Primär */
+  --th-primary:        #0F4C81;  /* Deep Arctic Blue */
+  --th-primary-bright: #1D4ED8;  /* Arctic Blue */
+
+  /* Hintergründe */
+  --th-bg:             #E0F2FE;  /* Ice Blue (Seitenhintergrund) */
+  --th-surface:        #F9FAFB;  /* Snow White (Cards / Panels) */
+
+  /* Rahmen / Linien */
+  --th-border:         #CBD5F5;  /* Frost Grey */
+
+  /* Text */
+  --th-text:           #0F172A;  /* Text Dark */
+  --th-text-muted:     #64748B;  /* Muted Text */
+
+  /* Status / Badges */
+  --th-live:           #EF4444;  /* LIVE / kritisch */
+  --th-soon:           #0EA5E9;  /* "Gleich" / Info */
+  --th-finished:       #16A34A;  /* Beendet / Success */
+
+  /* Sonstiges */
+  --th-shadow-soft:    0 10px 25px rgba(15, 76, 129, 0.08);
+  --th-radius-card:    16px;
+  --th-radius-pill:    999px;
+  --th-radius-button:  10px;
+
+  --th-font-sans:      system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                       sans-serif;
+}
+
+/* =========================
+   Basis-Layout & Typografie
+   ========================= */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--th-font-sans);
+  background-color: var(--th-bg);
+  color: var(--th-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 0.5rem;
+  color: var(--th-text);
+  font-weight: 600;
+}
+
+p {
+  margin: 0 0 0.75rem;
+  line-height: 1.4;
+}
+
+/* =========================
+   Header / Navigation
+   ========================= */
+
+.th-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2.5rem;
+  height: 4.5rem;
+  background-color: var(--th-primary);
+  color: var(--th-surface);
+}
+
+.th-header__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.th-header__nav {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.th-header__nav-link {
+  color: #E0F2FE;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.th-header__nav-link:hover {
+  color: #FFFFFF;
+}
+
+/* "Live: 3 Matten"-Badge im Header */
+.th-header__live-pill {
+  padding: 0.4rem 1.1rem;
+  border-radius: var(--th-radius-pill);
+  background-color: var(--th-primary-bright);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* =========================
+   Utility-Klassen – Layout
+   ========================= */
+
+.th-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.th-grid-3 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .th-grid-3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.th-mt-sm { margin-top: 0.75rem; }
+.th-mt-md { margin-top: 1.5rem; }
+.th-mt-lg { margin-top: 2rem; }
+.th-mb-md { margin-bottom: 1.5rem; }
+
+.th-flex {
+  display: flex;
+}
+
+.th-flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.th-flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.th-gap-sm { gap: 0.5rem; }
+.th-gap-md { gap: 1rem; }
+
+/* =========================
+   Utility-Klassen – Farben
+   ========================= */
+
+/* Backgrounds */
+.th-bg-page {
+  background-color: var(--th-bg);
+}
+
+.th-bg-surface {
+  background-color: var(--th-surface);
+}
+
+.th-bg-primary {
+  background-color: var(--th-primary);
+}
+
+.th-bg-primary-bright {
+  background-color: var(--th-primary-bright);
+}
+
+/* Textfarben */
+.th-text-main {
+  color: var(--th-text);
+}
+
+.th-text-muted {
+  color: var(--th-text-muted);
+}
+
+.th-text-on-primary {
+  color: var(--th-surface);
+}
+
+/* Border */
+.th-border {
+  border: 1px solid var(--th-border);
+}
+
+/* =========================
+   Cards / Panels
+   ========================= */
+
+.th-card {
+  background-color: var(--th-surface);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-card);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--th-shadow-soft);
+}
+
+.th-card--flat {
+  box-shadow: none;
+}
+
+/* =========================
+   Buttons
+   ========================= */
+
+.th-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 1.1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: var(--th-radius-button);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease, transform 0.05s ease,
+              box-shadow 0.15s ease;
+}
+
+.th-btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+/* Primary Button */
+.th-btn--primary {
+  background-color: var(--th-primary);
+  color: var(--th-surface);
+  box-shadow: var(--th-shadow-soft);
+}
+
+.th-btn--primary:hover {
+  background-color: var(--th-primary-bright);
+}
+
+/* Secondary / subtile */
+.th-btn--secondary {
+  background-color: var(--th-surface);
+  color: var(--th-text);
+  border: 1px solid var(--th-border);
+}
+
+.th-btn--secondary:hover {
+  background-color: #E5F0FF;
+}
+
+/* Ghost / Link */
+.th-btn--ghost {
+  background-color: transparent;
+  color: var(--th-primary-bright);
+  border: none;
+}
+
+.th-btn--ghost:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   Filter-Pills
+   ========================= */
+
+.th-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.9rem;
+  background-color: var(--th-bg);
+  border-radius: var(--th-radius-pill);
+  border: 1px solid var(--th-border);
+  font-size: 0.85rem;
+  color: var(--th-text-muted);
+  white-space: nowrap;
+}
+
+/* =========================
+   Badges (Status)
+   ========================= */
+
+.th-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--th-radius-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  white-space: nowrap;
+}
+
+/* LIVE (rot) */
+.th-badge--live {
+  background-color: var(--th-live);
+}
+
+/* Gleich / bald (blau) */
+.th-badge--soon {
+  background-color: var(--th-soon);
+}
+
+/* Beendet (grün) */
+.th-badge--finished {
+  background-color: var(--th-finished);
+}
+
+/* Neutral / Info */
+.th-badge--neutral {
+  background-color: var(--th-primary-bright);
+}
+
+/* =========================
+   Kleine Text-Styles
+   ========================= */
+
+.th-label {
+  font-size: 0.8rem;
+  color: var(--th-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.th-meta {
+  font-size: 0.85rem;
+  color: var(--th-text-muted);
+}
+
+/* =========================
+   Listen / Tabellen (leicht)
+   ========================= */
+
+.th-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.th-list__item {
+  padding: 0.6rem 0;
+  border-top: 1px solid rgba(203, 213, 245, 0.8);
+}
+
+.th-list__item:first-child {
+  border-top: none;
+}
+
+/* Beispiel für einfache Tabelle */
+.th-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.th-table th,
+.th-table td {
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+}
+
+.th-table thead {
+  background-color: #E5EDFF;
+}
+
+.th-table thead th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--th-text-muted);
+}
+
+.th-table tbody tr:nth-child(even) {
+  background-color: #EFF6FF;
+}
+
+/* =========================
+   Fußzeile / Hilfstext
+   ========================= */
+
+.th-footer-note {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--th-text-muted);
+}
