@@ -52,6 +52,20 @@ if (str_starts_with($path, '/api/')) {
   exit;
 }
 
+// Admin Dashboard (separate HTML)
+$adminPage = __DIR__ . '/admin/index.html';
+if ($path === '/admin' || $path === '/admin/index.html') {
+  if (!is_file($adminPage)) {
+    http_response_code(404);
+    echo "admin page not found";
+    exit;
+  }
+
+  header('Content-Type: text/html; charset=utf-8');
+  readfile($adminPage);
+  exit;
+}
+
 // Alles andere: Frontend ausliefern
 $indexHtml = __DIR__ . '/index.html';
 if (is_file($indexHtml)) {

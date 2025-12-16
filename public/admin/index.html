@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="th-bg-page">
+  <header class="th-header">
+    <div class="th-header__title">Admin</div>
+    <nav class="th-header__nav" aria-label="Navigation">
+      <a class="th-header__nav-link" href="/">Kalender</a>
+      <span class="th-header__live-pill">Dashboard</span>
+    </nav>
+  </header>
+
+  <main class="th-container th-mt-md">
+    <section class="th-card">
+      <p class="th-text-muted">Verwaltung</p>
+      <h1>Dashboard</h1>
+      <p>Wähle einen Bereich aus, um Nutzer- oder Turnierdaten zu verwalten.</p>
+      <div class="admin-grid th-mt-md">
+        <a class="th-card admin-card" href="/admin/users">
+          <h3>Users</h3>
+          <p class="th-text-muted">Benutzerübersicht und Berechtigungen.</p>
+        </a>
+        <a class="th-card admin-card" href="/admin/tournaments">
+          <h3>Tournaments</h3>
+          <p class="th-text-muted">Turnierverwaltung und Einstellungen.</p>
+        </a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

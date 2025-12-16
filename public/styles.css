@@ -156,6 +156,25 @@ p {
 .th-gap-sm { gap: 0.5rem; }
 .th-gap-md { gap: 1rem; }
 
+/* Admin Dashboard */
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.admin-card {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.12s ease, box-shadow 0.2s ease;
+}
+
+.admin-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(15, 76, 129, 0.12);
+}
+
 /* =========================
    Utility-Klassen – Farben
    ========================= */
