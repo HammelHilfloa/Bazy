@@ -1,61 +1,64 @@
 <?php
 declare(strict_types=1);
 
+// Projekt-Root (Ordner über /public)
 define('APP_BASE', realpath(__DIR__ . '/..') ?: (__DIR__ . '/..'));
 
-function send_json(array $payload, int $status = 200): void
-{
-    http_response_code($status);
-    header('Content-Type: application/json');
-    echo json_encode($payload, JSON_UNESCAPED_UNICODE);
-}
+$uri  = $_SERVER['REQUEST_URI'] ?? '/';
+$path = parse_url($uri, PHP_URL_PATH) ?: '/';
+$path = rawurldecode($path);
 
-$uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
-$path = rtrim($uri, '/');
-if ($path === '') {
-    $path = '/';
-}
+// Normalisieren (kein doppelter Slash, kein trailing slash außer root)
+$path = preg_replace('#/+#', '/', $path);
+if ($path !== '/' && str_ends_with($path, '/')) $path = rtrim($path, '/');
 
-if (strpos($path, '/api/') === 0) {
-    $aliases = [
-        '/api/events' => '/api/events.php',
-        '/api/holidays' => '/api/holidays.php',
-        '/api/csrf' => '/api/csrf.php',
-        '/api/health' => '/api/health.php',
-    ];
+// Whitelist-Routing (WICHTIG: nur diese Endpoints erlauben)
+$routes = [
+  '/api/events.php'   => APP_BASE . '/api/events.php',
+  '/api/csrf.php'     => APP_BASE . '/api/csrf.php',
+  '/api/holidays.php' => APP_BASE . '/api/holidays.php',
 
-    if (isset($aliases[$path])) {
-        $path = $aliases[$path];
-    }
+  // optional ohne .php
+  '/api/events'   => APP_BASE . '/api/events.php',
+  '/api/csrf'     => APP_BASE . '/api/csrf.php',
+  '/api/holidays' => APP_BASE . '/api/holidays.php',
+];
 
-    $whitelist = [
-        '/api/events.php' => APP_BASE . '/api/events.php',
-        '/api/holidays.php' => APP_BASE . '/api/holidays.php',
-        '/api/csrf.php' => APP_BASE . '/api/csrf.php',
-        '/api/health.php' => APP_BASE . '/api/health.php',
-    ];
-
-    if (!isset($whitelist[$path])) {
-        send_json(['error' => 'not_found'], 404);
-        exit;
-    }
-
-    $target = $whitelist[$path];
-    if (!is_file($target)) {
-        send_json(['error' => 'not_found'], 404);
-        exit;
-    }
-
-    require $target;
+if (str_starts_with($path, '/api/')) {
+  if (!isset($routes[$path])) {
+    http_response_code(404);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+      'error' => 'not_found',
+      'path'  => $path,
+    ], JSON_UNESCAPED_UNICODE);
     exit;
+  }
+
+  $target = $routes[$path];
+
+  if (!is_file($target)) {
+    http_response_code(500);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+      'error' => 'server_misconfig',
+      'message' => 'Route mapped file not found on disk',
+      'mapped' => $target,
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+  }
+
+  require $target;
+  exit;
 }
 
-$frontend = __DIR__ . '/index.html';
-if (is_file($frontend)) {
-    header('Content-Type: text/html; charset=utf-8');
-    readfile($frontend);
-    exit;
+// Alles andere: Frontend ausliefern
+$indexHtml = __DIR__ . '/index.html';
+if (is_file($indexHtml)) {
+  header('Content-Type: text/html; charset=utf-8');
+  readfile($indexHtml);
+  exit;
 }
 
 http_response_code(404);
-echo 'Not Found';
+echo "index.html not found";
