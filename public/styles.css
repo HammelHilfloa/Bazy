@@ -674,6 +674,32 @@ p {
   display: block;
 }
 
+.form-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 50;
+}
+
+.form-overlay.is-visible {
+  display: flex;
+}
+
+.form-modal {
+  width: min(640px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  background: var(--th-surface);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-card);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+  padding: 1.25rem;
+}
+
 .panel-section + .panel-section {
   margin-top: 1rem;
   padding-top: 1rem;
