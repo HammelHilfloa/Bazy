@@ -15,6 +15,7 @@ if ($year < 2000 || $year > 2100) {
 }
 
 $cacheFile = sprintf('%s/cache/holidays_%d_DE-NW.json', APP_BASE, $year);
+$fallbackFile = sprintf('%s/data/holidays_%d_DE-NW_fallback.json', APP_BASE, $year);
 $cacheTtl = 60 * 60 * 24; // 24h
 $validFrom = sprintf('%d-01-01', $year);
 $validTo = sprintf('%d-12-31', $year);
@@ -67,6 +68,17 @@ function fetchJsonFromApi(string $url): array
 
     $data = json_decode($json, true);
     return is_array($data) ? $data : [];
+}
+
+function readJsonFile(string $file): array
+{
+    if (!is_file($file)) {
+        return [];
+    }
+
+    $contents = file_get_contents($file);
+    $decoded = json_decode($contents, true);
+    return is_array($decoded) ? $decoded : [];
 }
 
 function extractName(array $item): string
@@ -142,6 +154,13 @@ if (!empty($normalized)) {
 
 if (file_exists($cacheFile)) {
     readfile($cacheFile);
+    exit;
+}
+
+$fallbackData = readJsonFile($fallbackFile);
+if (!empty($fallbackData)) {
+    file_put_contents($cacheFile, json_encode($fallbackData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    echo json_encode($fallbackData, JSON_UNESCAPED_UNICODE);
     exit;
 }
 

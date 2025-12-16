@@ -75,48 +75,6 @@
           </div>
         </div>
 
-        <div id="form-panel" class="panel-section is-hidden">
-          <div class="panel-header">
-            <h3 id="form-title">Termin hinzufügen</h3>
-            <button type="button" id="btn-close-form" class="th-btn th-btn--ghost">Schließen</button>
-          </div>
-          <form id="event-form" class="event-form">
-            <label for="title">Titel</label>
-            <input id="title" name="title" type="text" required />
-
-            <label for="description">Beschreibung</label>
-            <textarea id="description" name="description" rows="3"></textarea>
-
-            <div class="two-col">
-              <div>
-                <label for="start-date">Beginn</label>
-                <input id="start-date" name="start-date" type="date" required />
-              </div>
-              <div>
-                <label for="end-date">Ende</label>
-                <input id="end-date" name="end-date" type="date" required />
-              </div>
-            </div>
-
-            <div class="two-col">
-              <div>
-                <label for="category">Kategorie</label>
-                <select id="category" name="category" required></select>
-              </div>
-              <div>
-                <label for="color">Farbe</label>
-                <input id="color" name="color" type="color" value="#0F4C81" />
-              </div>
-            </div>
-
-            <div class="form-actions">
-              <button type="submit" class="th-btn">Speichern</button>
-              <button type="button" id="btn-reset" class="th-btn th-btn-secondary">Abbrechen</button>
-              <button type="button" id="btn-delete" class="th-btn th-btn-danger" aria-live="polite">Löschen</button>
-            </div>
-          </form>
-        </div>
-
         <div class="event-list th-mt-md">
           <h4>Alle Termine</h4>
           <ul id="event-list" class="event-list__items"></ul>
@@ -124,6 +82,50 @@
         </div>
       </aside>
     </section>
+
+    <div class="form-overlay" id="form-overlay" role="dialog" aria-modal="true" aria-labelledby="form-title">
+      <div id="form-panel" class="form-modal">
+        <div class="panel-header">
+          <h3 id="form-title">Termin hinzufügen</h3>
+          <button type="button" id="btn-close-form" class="th-btn th-btn--ghost">Schließen</button>
+        </div>
+        <form id="event-form" class="event-form">
+          <label for="title">Titel</label>
+          <input id="title" name="title" type="text" required />
+
+          <label for="description">Beschreibung</label>
+          <textarea id="description" name="description" rows="3"></textarea>
+
+          <div class="two-col">
+            <div>
+              <label for="start-date">Beginn</label>
+              <input id="start-date" name="start-date" type="date" required />
+            </div>
+            <div>
+              <label for="end-date">Ende</label>
+              <input id="end-date" name="end-date" type="date" required />
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div>
+              <label for="category">Kategorie</label>
+              <select id="category" name="category" required></select>
+            </div>
+            <div>
+              <label for="color">Farbe</label>
+              <input id="color" name="color" type="color" value="#0F4C81" />
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="th-btn">Speichern</button>
+            <button type="button" id="btn-reset" class="th-btn th-btn-secondary">Abbrechen</button>
+            <button type="button" id="btn-delete" class="th-btn th-btn-danger" aria-live="polite">Löschen</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <section id="year-print" class="year-print"></section>
   </main>

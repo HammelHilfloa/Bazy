@@ -42,6 +42,7 @@ const monthTitle = document.getElementById('month-title');
 const layout = document.getElementById('layout');
 const sidePanel = document.getElementById('side-panel');
 const detailsPanel = document.getElementById('event-details');
+const formOverlay = document.getElementById('form-overlay');
 const formPanel = document.getElementById('form-panel');
 const form = document.getElementById('event-form');
 const formTitle = document.getElementById('form-title');
@@ -147,11 +148,14 @@ function renderLegend() {
 }
 
 function setPanelVisibility(mode = 'hidden') {
-  const isVisible = mode !== 'hidden';
-  sidePanel.classList.toggle('is-visible', isVisible);
-  layout.classList.toggle('layout--with-panel', isVisible);
-  detailsPanel.classList.toggle('is-hidden', mode !== 'details');
-  formPanel.classList.toggle('is-hidden', mode !== 'form');
+  const showDetails = mode === 'details';
+  const showForm = mode === 'form';
+
+  sidePanel.classList.toggle('is-visible', showDetails);
+  layout.classList.toggle('layout--with-panel', showDetails);
+  detailsPanel.classList.toggle('is-hidden', !showDetails);
+
+  formOverlay.classList.toggle('is-visible', showForm);
 }
 
 function hideSidePanel() {
@@ -397,7 +401,7 @@ function startEditing(id) {
   setPanelVisibility('form');
 }
 
-function onDropOnCell(ev) {
+async function onDropOnCell(ev) {
   ev.preventDefault();
   const eventId = ev.dataTransfer.getData('text/plain');
   const evt = events.find((item) => item.id === eventId);
@@ -417,10 +421,10 @@ function onDropOnCell(ev) {
   evt.startDate = formatDate(newStart);
   evt.endDate = formatDate(newEnd);
   renderMonth(activeMonth);
-  persistEvents();
+  await persistEvents();
 }
 
-function handleFormSubmit(ev) {
+async function handleFormSubmit(ev) {
   ev.preventDefault();
   const title = form.title.value.trim();
   const description = form.description.value.trim();
@@ -451,7 +455,7 @@ function handleFormSubmit(ev) {
   }
 
   renderMonth(activeMonth);
-  persistEvents();
+  await persistEvents();
   resetForm();
   hideSidePanel();
 }
@@ -595,11 +599,14 @@ function initEventHandlers() {
   addFreshBtn.addEventListener('click', openCreateForm);
   closeFormBtn.addEventListener('click', hideSidePanel);
   closeDetailsBtn.addEventListener('click', hideSidePanel);
-  deleteBtn.addEventListener('click', () => {
+  formOverlay.addEventListener('click', (event) => {
+    if (event.target === formOverlay) hideSidePanel();
+  });
+  deleteBtn.addEventListener('click', async () => {
     if (!editingId) return;
     events = events.filter((evt) => evt.id !== editingId);
     resetForm();
-    persistEvents();
+    await persistEvents();
     renderMonth(activeMonth);
     hideSidePanel();
   });
