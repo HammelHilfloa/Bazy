@@ -24,7 +24,7 @@ const months = [
   'Dezember',
 ];
 
-const API_BASE = '../api';
+const API_BASE = '/api';
 const YEAR = 2026;
 
 let events = [];
@@ -185,7 +185,7 @@ async function loadEvents() {
 
 async function loadHolidays() {
   try {
-    const response = await fetch(`${API_BASE}/holidays.php`, { credentials: 'same-origin' });
+    const response = await fetch(`${API_BASE}/holidays.php?year=${YEAR}`, { credentials: 'same-origin' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     holidays = await response.json();
     renderMonth(activeMonth);

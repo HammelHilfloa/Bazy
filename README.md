@@ -4,26 +4,31 @@ Kleines, datenbankloses Kalender-Projekt für Netcup Webhosting. Frontend: stati
 
 ## Projektstruktur
 ```
-public/          # Statisches Frontend (index.html, app.js, styles.css)
-api/             # PHP-Endpunkte (events, holidays, csrf)
+public/          # Statisches Frontend (index.html, app.js, styles.css, router.php, .htaccess)
+api/             # PHP-Endpunkte (events, holidays, csrf, health)
 data/            # JSON-Daten + Backups (events_2026.json, backups/)
-cache/           # Feiertags-/Ferien-Cache (holidays_2026.json)
+cache/           # Feiertags-/Ferien-Cache (holidays_2026_DE-NW.json)
 ```
 
 ## Lokal testen
 1. PHP Built-in Server starten (root des Repos):
    ```bash
-   php -S localhost:8000 router.php
+   php -S localhost:8000 -t public public/router.php
    ```
-   Der Router sorgt dafür, dass `/public` als Webroot genutzt und `/api` korrekt aufgelöst wird.
-2. Browser öffnen: http://localhost:8000/public/
+   Der Front-Controller in `public/router.php` sorgt dafür, dass `/public` als Webroot genutzt wird und die `/api`-Skripte
+   parallel dazu erreichbar bleiben.
+2. Browser öffnen: http://localhost:8000/
 3. Änderungen an Terminen per Drag & Drop oder Formular vornehmen. Speichern erfolgt automatisch via `api/events.php`.
 
-## Deployment auf Netcup
-1. Ordner-Inhalt nach `httpdocs/kalender/` hochladen (Struktur beibehalten).
-2. In Plesk für das Verzeichnis `kalender/` den Passwortschutz aktivieren ("Password protected directories"), damit der gesamte Ordner geschützt ist.
-3. Dateirechte setzen, sodass PHP in `data/` und `cache/` schreiben darf (z.B. 775 bzw. Webserver-User als Besitzer).
-4. Aufruf anschließend über `https://<your-domain>/kalender/public/`.
+## Deployment auf Netcup/Plesk
+1. Dokumentenstamm (Document Root) auf das Verzeichnis `public/` zeigen lassen.
+2. `.htaccess` in `public/` benötigt aktiviertes `mod_rewrite` (Standard bei Plesk) und leitet alle Requests an `public/router.php`.
+3. Ordnerrechte setzen, sodass PHP in `data/`, `data/backups/` und `cache/` schreiben darf (z.B. 775 bzw. Webserver-User als Besitzer).
+4. Die `/api`-Skripte liegen parallel zu `public/` und werden vom Router per Whitelist eingebunden – es erfolgt keine direkte Auslieferung aus dem Document Root.
+5. Beispiel-URLs nach Deployment:
+   - https://calender.familie-bazynski.de/api/health.php
+   - https://calender.familie-bazynski.de/api/holidays.php?year=2026
+   - https://calender.familie-bazynski.de/api/events.php
 
 ## Sicherheit & CSRF
 - CSRF-Token wird von `api/csrf.php` erzeugt und muss als Header `X-CSRF-Token` bei POST auf `api/events.php` mitgeschickt werden.
