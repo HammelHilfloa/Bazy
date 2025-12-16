@@ -34,14 +34,28 @@ let editingId = null;
 let csrfToken = null;
 
 const monthSelect = document.getElementById('month-select');
+const prevMonthBtn = document.getElementById('btn-prev-month');
+const nextMonthBtn = document.getElementById('btn-next-month');
 const filterSelect = document.getElementById('filter-category');
 const calendarTable = document.getElementById('calendar-table');
 const monthTitle = document.getElementById('month-title');
+const layout = document.getElementById('layout');
+const sidePanel = document.getElementById('side-panel');
+const detailsPanel = document.getElementById('event-details');
+const formPanel = document.getElementById('form-panel');
 const form = document.getElementById('event-form');
 const formTitle = document.getElementById('form-title');
 const deleteBtn = document.getElementById('btn-delete');
 const resetBtn = document.getElementById('btn-reset');
 const addFreshBtn = document.getElementById('btn-add-fresh');
+const closeFormBtn = document.getElementById('btn-close-form');
+const closeDetailsBtn = document.getElementById('btn-close-details');
+const detailsTitle = document.getElementById('details-title');
+const detailsDates = document.getElementById('details-dates');
+const detailsCategory = document.getElementById('details-category');
+const detailsRange = document.getElementById('details-range');
+const detailsDescription = document.getElementById('details-description');
+const detailsEditBtn = document.getElementById('btn-details-edit');
 const printMonthBtn = document.getElementById('btn-print-month');
 const printYearBtn = document.getElementById('btn-print-year');
 const downloadBtn = document.getElementById('btn-download');
@@ -67,6 +81,12 @@ function formatDate(date) {
   const month = `${date.getMonth() + 1}`.padStart(2, '0');
   const day = `${date.getDate()}`.padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+function shortenText(text, maxLength = 80) {
+  const safeText = text || '';
+  if (safeText.length <= maxLength) return safeText;
+  return `${safeText.slice(0, maxLength - 1)}…`;
 }
 
 function daysInMonth(year, monthIndex) {
@@ -126,6 +146,18 @@ function renderLegend() {
   });
 }
 
+function setPanelVisibility(mode = 'hidden') {
+  const isVisible = mode !== 'hidden';
+  sidePanel.classList.toggle('is-visible', isVisible);
+  layout.classList.toggle('layout--with-panel', isVisible);
+  detailsPanel.classList.toggle('is-hidden', mode !== 'details');
+  formPanel.classList.toggle('is-hidden', mode !== 'form');
+}
+
+function hideSidePanel() {
+  setPanelVisibility('hidden');
+}
+
 async function fetchCsrfToken() {
   try {
     const response = await fetch(`${API_BASE}/csrf.php`, { credentials: 'same-origin' });
@@ -172,9 +204,10 @@ function createEventElement(event, dateText) {
   el.dataset.end = event.endDate;
   el.dataset.date = dateText;
   el.style.backgroundColor = event.color;
-  el.innerHTML = `<strong>${event.title}</strong><span>${event.category}</span>`;
+  const infoText = event.description ? shortenText(event.description, 70) : 'Keine Beschreibung';
+  el.innerHTML = `<strong>${event.title}</strong><span>${infoText}</span>`;
 
-  el.addEventListener('click', () => startEditing(event.id));
+  el.addEventListener('click', () => openEventDetails(event.id));
   el.addEventListener('dragstart', (ev) => {
     ev.dataTransfer.setData('text/plain', event.id);
     ev.dataTransfer.effectAllowed = 'move';
@@ -265,6 +298,11 @@ function renderMonth(monthIndex = activeMonth) {
   placeEventsInMonth(monthIndex);
 }
 
+function changeMonth(step) {
+  const next = (activeMonth + step + 12) % 12;
+  renderMonth(next);
+}
+
 function placeEventsInMonth(monthIndex) {
   const filter = filterSelect.value;
   events.forEach((evt) => {
@@ -305,11 +343,41 @@ function renderEventList() {
   });
 }
 
+function formatRangeText(evt) {
+  return evt.startDate === evt.endDate ? evt.startDate : `${evt.startDate} – ${evt.endDate}`;
+}
+
+function openEventDetails(id) {
+  const evt = events.find((item) => item.id === id);
+  if (!evt) return;
+
+  const start = parseDateString(evt.startDate);
+  const end = parseDateString(evt.endDate);
+  const duration = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+  detailsTitle.textContent = evt.title;
+  detailsDates.textContent = formatRangeText(evt);
+  detailsCategory.textContent = evt.category;
+  detailsCategory.style.backgroundColor = evt.color;
+  detailsCategory.style.color = '#fff';
+  detailsRange.textContent = duration === 1 ? '1 Tag' : `${duration} Tage`;
+  detailsDescription.textContent = evt.description || 'Keine Beschreibung hinterlegt.';
+
+  detailsEditBtn.onclick = () => startEditing(id);
+
+  setPanelVisibility('details');
+}
+
 function resetForm() {
   form.reset();
   editingId = null;
   formTitle.textContent = 'Termin hinzufügen';
   deleteBtn.disabled = true;
+}
+
+function openCreateForm() {
+  resetForm();
+  setPanelVisibility('form');
 }
 
 function startEditing(id) {
@@ -325,6 +393,8 @@ function startEditing(id) {
   form['end-date'].value = evt.endDate;
   form.category.value = evt.category;
   form.color.value = evt.color;
+
+  setPanelVisibility('form');
 }
 
 function onDropOnCell(ev) {
@@ -383,6 +453,7 @@ function handleFormSubmit(ev) {
   renderMonth(activeMonth);
   persistEvents();
   resetForm();
+  hideSidePanel();
 }
 
 function downloadJson() {
@@ -513,16 +584,24 @@ async function persistEvents() {
 
 function initEventHandlers() {
   monthSelect.addEventListener('change', (e) => renderMonth(Number(e.target.value)));
+  prevMonthBtn.addEventListener('click', () => changeMonth(-1));
+  nextMonthBtn.addEventListener('click', () => changeMonth(1));
   filterSelect.addEventListener('change', () => renderMonth(activeMonth));
   form.addEventListener('submit', handleFormSubmit);
-  resetBtn.addEventListener('click', resetForm);
-  addFreshBtn.addEventListener('click', resetForm);
+  resetBtn.addEventListener('click', () => {
+    resetForm();
+    hideSidePanel();
+  });
+  addFreshBtn.addEventListener('click', openCreateForm);
+  closeFormBtn.addEventListener('click', hideSidePanel);
+  closeDetailsBtn.addEventListener('click', hideSidePanel);
   deleteBtn.addEventListener('click', () => {
     if (!editingId) return;
     events = events.filter((evt) => evt.id !== editingId);
     resetForm();
     persistEvents();
     renderMonth(activeMonth);
+    hideSidePanel();
   });
   downloadBtn.addEventListener('click', downloadJson);
   printMonthBtn.addEventListener('click', printMonth);
@@ -534,6 +613,7 @@ async function bootstrap() {
   renderCategorySelects();
   renderLegend();
   resetForm();
+  hideSidePanel();
   await fetchCsrfToken();
   await Promise.all([loadEvents(), loadHolidays()]);
   initEventHandlers();

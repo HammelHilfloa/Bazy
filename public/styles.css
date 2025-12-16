@@ -408,6 +408,22 @@ p {
   align-items: end;
 }
 
+.month-nav__controls {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.month-nav__btn {
+  padding: 0.45rem 0.65rem;
+}
+
+.control-input--compact {
+  max-width: 160px;
+  padding: 0.45rem 0.6rem;
+}
+
 .control-group label {
   display: block;
   font-weight: 600;
@@ -432,12 +448,16 @@ p {
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 2.2fr) minmax(320px, 1fr);
+  grid-template-columns: 1fr;
   gap: 1.25rem;
 }
 
+.layout.layout--with-panel {
+  grid-template-columns: minmax(0, 2.2fr) minmax(340px, 1fr);
+}
+
 .calendar-area,
-.form-panel {
+.side-panel {
   border-radius: var(--th-radius-card);
   box-shadow: var(--th-shadow-soft);
   padding: 1.25rem;
@@ -502,6 +522,10 @@ p {
 }
 
 .calendar-event span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.8rem;
   opacity: 0.9;
 }
@@ -642,6 +666,63 @@ p {
   margin-top: 0.2rem;
 }
 
+.side-panel {
+  display: none;
+}
+
+.side-panel.is-visible {
+  display: block;
+}
+
+.panel-section + .panel-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--th-border);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.panel-section.is-hidden {
+  display: none;
+}
+
+.details-meta {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.details-tag {
+  background: var(--th-bg);
+  border: 1px solid var(--th-border);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--th-radius-pill);
+  font-size: 0.8rem;
+}
+
+.details-tag--muted {
+  color: var(--th-text-muted);
+}
+
+.details-description {
+  background: #f8fbff;
+  border: 1px solid var(--th-border);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  min-height: 72px;
+}
+
+.details-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
 /* Utility aliases */
 .th-btn-danger {
   background-color: #dc2626;
@@ -699,6 +780,7 @@ p {
 
   .control-panel,
   .form-panel,
+  .side-panel,
   .legend,
   #event-list,
   #btn-download,
