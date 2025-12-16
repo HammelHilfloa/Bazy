@@ -8,6 +8,7 @@ public/          # Statisches Frontend (index.html, app.js, styles.css, router.p
 api/             # PHP-Endpunkte (events, holidays, csrf, health)
 data/            # JSON-Daten + Backups (events_2026.json, backups/)
 cache/           # Feiertags-/Ferien-Cache (holidays_2026_DE-NW.json)
+public/api/      # Schlanke Proxy-Skripte, damit /api auch bei reinem /public-Document-Root erreichbar ist
 ```
 
 ## Lokal testen
