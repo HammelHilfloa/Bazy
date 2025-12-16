@@ -20,9 +20,13 @@
   <main class="th-container th-mt-md">
     <section class="th-bg-surface th-border th-mb-md control-panel">
       <div class="control-row">
-        <div class="control-group">
+        <div class="control-group month-nav">
           <label for="month-select">Monat wählen</label>
-          <select id="month-select" class="control-input"></select>
+          <div class="month-nav__controls">
+            <button id="btn-prev-month" class="th-btn th-btn-secondary month-nav__btn" aria-label="Vorheriger Monat">&#8592;</button>
+            <select id="month-select" class="control-input control-input--compact"></select>
+            <button id="btn-next-month" class="th-btn th-btn-secondary month-nav__btn" aria-label="Nächster Monat">&#8594;</button>
+          </div>
         </div>
         <div class="control-group">
           <label for="filter-category">Kategorie filtern</label>
@@ -39,7 +43,7 @@
       <p class="th-text-muted info-hint">Alle Daten liegen serverseitig in <code>data/events_2026.json</code>. Änderungen werden sofort gespeichert, Drag &amp; Drop verschiebt komplette Terminblöcke.</p>
     </section>
 
-    <section class="layout">
+    <section class="layout" id="layout">
       <div class="calendar-area th-bg-surface th-border">
         <div class="th-flex-between th-mb-md">
           <div>
@@ -53,43 +57,65 @@
         </div>
       </div>
 
-      <aside class="form-panel th-bg-surface th-border">
-        <h3 id="form-title">Termin hinzufügen</h3>
-        <form id="event-form" class="event-form">
-          <label for="title">Titel</label>
-          <input id="title" name="title" type="text" required />
-
-          <label for="description">Beschreibung</label>
-          <textarea id="description" name="description" rows="3"></textarea>
-
-          <div class="two-col">
-            <div>
-              <label for="start-date">Beginn</label>
-              <input id="start-date" name="start-date" type="date" required />
-            </div>
-            <div>
-              <label for="end-date">Ende</label>
-              <input id="end-date" name="end-date" type="date" required />
-            </div>
+      <aside class="side-panel th-bg-surface th-border" id="side-panel">
+        <div id="event-details" class="panel-section">
+          <div class="panel-header">
+            <p class="th-text-muted">Termin-Details</p>
+            <button type="button" id="btn-close-details" class="th-btn th-btn--ghost">Schließen</button>
           </div>
-
-          <div class="two-col">
-            <div>
-              <label for="category">Kategorie</label>
-              <select id="category" name="category" required></select>
-            </div>
-            <div>
-              <label for="color">Farbe</label>
-              <input id="color" name="color" type="color" value="#0F4C81" />
-            </div>
+          <h3 id="details-title">Termin wählen</h3>
+          <p id="details-dates" class="th-text-muted"></p>
+          <div class="details-meta">
+            <span id="details-category" class="details-tag">Kategorie</span>
+            <span id="details-range" class="details-tag details-tag--muted"></span>
           </div>
-
-          <div class="form-actions">
-            <button type="submit" class="th-btn">Speichern</button>
-            <button type="button" id="btn-reset" class="th-btn th-btn-secondary">Zurücksetzen</button>
-            <button type="button" id="btn-delete" class="th-btn th-btn-danger" aria-live="polite">Löschen</button>
+          <p id="details-description" class="details-description th-mt-sm">Wähle einen Termin für Details.</p>
+          <div class="details-actions">
+            <button id="btn-details-edit" class="th-btn">Bearbeiten</button>
           </div>
-        </form>
+        </div>
+
+        <div id="form-panel" class="panel-section is-hidden">
+          <div class="panel-header">
+            <h3 id="form-title">Termin hinzufügen</h3>
+            <button type="button" id="btn-close-form" class="th-btn th-btn--ghost">Schließen</button>
+          </div>
+          <form id="event-form" class="event-form">
+            <label for="title">Titel</label>
+            <input id="title" name="title" type="text" required />
+
+            <label for="description">Beschreibung</label>
+            <textarea id="description" name="description" rows="3"></textarea>
+
+            <div class="two-col">
+              <div>
+                <label for="start-date">Beginn</label>
+                <input id="start-date" name="start-date" type="date" required />
+              </div>
+              <div>
+                <label for="end-date">Ende</label>
+                <input id="end-date" name="end-date" type="date" required />
+              </div>
+            </div>
+
+            <div class="two-col">
+              <div>
+                <label for="category">Kategorie</label>
+                <select id="category" name="category" required></select>
+              </div>
+              <div>
+                <label for="color">Farbe</label>
+                <input id="color" name="color" type="color" value="#0F4C81" />
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="th-btn">Speichern</button>
+              <button type="button" id="btn-reset" class="th-btn th-btn-secondary">Abbrechen</button>
+              <button type="button" id="btn-delete" class="th-btn th-btn-danger" aria-live="polite">Löschen</button>
+            </div>
+          </form>
+        </div>
 
         <div class="event-list th-mt-md">
           <h4>Alle Termine</h4>

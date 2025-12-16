@@ -1,10 +1,23 @@
 <?php
-$cacheFile = __DIR__ . '/../cache/holidays_2026.json';
-$cacheTtl = 60 * 60 * 24; // 24h
-$validFrom = '2026-01-01';
-$validTo = '2026-12-31';
+declare(strict_types=1);
+
+if (!defined('APP_BASE')) {
+    define('APP_BASE', realpath(__DIR__ . '/..') ?: (__DIR__ . '/..'));
+}
 
 header('Content-Type: application/json');
+
+$year = isset($_GET['year']) ? (int) $_GET['year'] : 2026;
+if ($year < 2000 || $year > 2100) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Ungültiges Jahr']);
+    exit;
+}
+
+$cacheFile = sprintf('%s/cache/holidays_%d_DE-NW.json', APP_BASE, $year);
+$cacheTtl = 60 * 60 * 24; // 24h
+$validFrom = sprintf('%d-01-01', $year);
+$validTo = sprintf('%d-12-31', $year);
 
 if (!is_dir(dirname($cacheFile))) {
     mkdir(dirname($cacheFile), 0775, true);
@@ -123,11 +136,10 @@ $normalized = array_merge(
 
 if (!empty($normalized)) {
     file_put_contents($cacheFile, json_encode($normalized, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-    echo json_encode($normalized);
+    echo json_encode($normalized, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// Fallback: versuche alten Cache
 if (file_exists($cacheFile)) {
     readfile($cacheFile);
     exit;
