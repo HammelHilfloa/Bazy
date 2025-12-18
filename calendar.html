@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vereinskalender</title>
+  <style>
+    :root{
+      --brand: #2563eb;
+      --brand-2: #1e3a8a;
+      --navy: #0f172a;
+      --bg: #f8fbff;
+      --panel: rgba(255,255,255,.9);
+      --line: #e6e7ec;
+      --line2: #d1d5db;
+      --muted: #6b7280;
+      --text: #0f172a;
+      --radius: 14px;
+      --shadow: 0 14px 32px rgba(15,23,42,.12);
+      --font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family:var(--font);
+      color:var(--text);
+      background:linear-gradient(180deg,#f7fbff 0%, var(--bg) 60%, var(--bg) 100%);
+    }
+    .app{max-width:1300px; margin:18px auto 40px; padding:0 16px;}
+    .topbar{
+      position:sticky; top:12px; z-index:10;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:14px; background:var(--panel);
+      border:1px solid var(--line); border-radius:var(--radius);
+      box-shadow:var(--shadow); backdrop-filter:blur(14px);
+    }
+    .brand{display:flex; align-items:center; gap:12px; min-width:240px;}
+    .logo{width:46px; height:46px; border-radius:16px;
+      background: radial-gradient(90% 90% at 24% 18%, #93c5fd 0%, var(--brand) 55%, var(--navy) 100%);
+      box-shadow:0 12px 26px rgba(37,99,235,.18); position:relative; overflow:hidden;
+    }
+    .logo:after{content:""; position:absolute; inset:-12px;
+      background: linear-gradient(120deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 45%);
+      transform: rotate(18deg);
+    }
+    .brand h1{margin:0; font-size:16px; line-height:1.2; letter-spacing:.2px;}
+    .brand .sub{margin-top:2px; font-size:12px; color:var(--muted);}
+    .controls{display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap;}
+    .btn{
+      appearance:none; border:1px solid var(--line); background:#fff;
+      color:var(--text); border-radius:12px; padding:10px 12px; font-size:13px;
+      cursor:pointer; transition:.15s transform, .15s box-shadow, .15s border-color;
+      box-shadow:0 2px 10px rgba(2,6,23,.05); display:flex; align-items:center; gap:8px;
+      user-select:none; white-space:nowrap;
+    }
+    .btn:hover{transform:translateY(-1px); border-color:var(--line2); box-shadow:0 10px 22px rgba(2,6,23,.1);}
+    .btn.primary{border-color:rgba(37,99,235,.35); background:linear-gradient(180deg, rgba(37,99,235,.10), rgba(37,99,235,.05)); color:#0b2a63;}
+    .btn.icon{padding:10px 10px; width:42px; justify-content:center;}
+    .btn.ghost{background:transparent; box-shadow:none;}
+    .monthTitle{display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--line); border-radius:999px; background:#fff; box-shadow:0 2px 10px rgba(2,6,23,.05); font-size:13px;}
+    .monthTitle b{font-size:13px; letter-spacing:.2px;}
+    .pill-group{display:flex; gap:8px; flex-wrap:wrap;}
+    .pill{padding:6px 10px; border-radius:30px; border:1px solid var(--line); font-size:12px; background:#fff; color:var(--muted);}    
+    .panel{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; margin-top:16px;}
+    .panel h3{margin:0 0 10px 0; font-size:15px;}
+    .grid{display:grid; gap:14px;}
+    .grid.cols-3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));}
+    .stat{padding:12px; border-radius:12px; border:1px solid var(--line); background:linear-gradient(180deg,#fff, #f8fbff);}
+    .stat .kpi{font-size:22px; font-weight:700; margin:6px 0 2px;}
+    .muted{color:var(--muted); font-size:12px;}
+    .viewTabs{display:flex; gap:8px; flex-wrap:wrap;}
+    .viewTabs .btn.active{border-color:rgba(37,99,235,.35); background:linear-gradient(180deg, rgba(37,99,235,.08), rgba(37,99,235,.02)); color:#0b2a63;}
+    table.calendar{width:100%; border-collapse:separate; border-spacing:0;}
+    table.calendar th, table.calendar td{padding:8px; border:1px solid var(--line);}
+    table.calendar th{background:#f8fafc; font-size:12px; color:var(--muted); position:sticky; top:0; z-index:1;}
+    table.calendar td{background:#fff; vertical-align:top; min-width:80px; position:relative;}
+    .groupCell{background:#f8fafc; font-weight:600; font-size:13px; width:140px; position:sticky; left:0; z-index:1;}
+    .eventChip{display:block; padding:6px 8px; margin-bottom:6px; border-radius:10px; background:rgba(37,99,235,.08); border:1px solid rgba(37,99,235,.25); font-size:12px; line-height:1.3; cursor:pointer;}
+    .eventChip small{display:block; color:var(--muted);}
+    .badge{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; background:#fff; border:1px solid var(--line); border-radius:10px; font-size:12px;}
+    .listRow{padding:12px; border:1px solid var(--line); border-radius:12px; background:#fff; display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px;}
+    .listRow .title{font-weight:600;}
+    .listRow .meta{font-size:12px; color:var(--muted);}    
+    .yearGrid{display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:12px;}
+    .monthCard{padding:12px; border:1px solid var(--line); border-radius:12px; background:#fff; min-height:140px; display:flex; flex-direction:column; gap:6px;}
+    .miniCal{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; font-size:11px; color:var(--muted);}
+    .miniCal span{padding:4px 0; text-align:center; border-radius:6px;}
+    .miniCal .hasEvent{background:rgba(37,99,235,.08); color:#0b2a63; font-weight:600; border:1px solid rgba(37,99,235,.18);}    
+    .sectionHeader{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px;}
+    .formGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; margin-top:10px;}
+    .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:4px;}
+    .field input,.field select,.field textarea{width:100%; border:1px solid var(--line); border-radius:10px; padding:10px; font-size:13px; font-family:var(--font);}
+    .field textarea{resize:vertical; min-height:80px;}
+    .toast{position:fixed; bottom:20px; right:20px; background:#0f172a; color:#fff; padding:12px 14px; border-radius:12px; box-shadow:0 12px 28px rgba(15,23,42,.2); opacity:0; transform:translateY(10px); transition:.25s; z-index:20;}
+    .toast.show{opacity:1; transform:translateY(0);}    
+    .hidden{display:none;}
+    .importInput{display:none;}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>Vereinskalender</h1>
+          <div class="sub">Planung für Jugend & Senioren</div>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="viewTabs" id="viewTabs"></div>
+        <button class="btn icon" id="prevBtn" aria-label="Zurück">◀</button>
+        <div class="monthTitle" id="title"></div>
+        <button class="btn icon" id="nextBtn" aria-label="Weiter">▶</button>
+        <button class="btn" id="todayBtn">Heute</button>
+        <button class="btn" id="importBtn">JSON Import</button>
+        <input type="file" accept="application/json" id="importInput" class="importInput" />
+        <button class="btn" id="exportBtn">JSON Export</button>
+        <button class="btn primary" id="newBtn">Neuer Termin</button>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="sectionHeader">
+        <h3>Überblick</h3>
+        <div class="pill-group" id="groupPills"></div>
+      </div>
+      <div class="grid cols-3" id="statGrid"></div>
+    </section>
+
+    <section class="panel" id="yearView" aria-label="Jahresüberblick"></section>
+    <section class="panel hidden" id="listView" aria-label="Listenansicht"></section>
+    <section class="panel hidden" id="monthView" aria-label="Monatsansicht"></section>
+    <section class="panel hidden" id="weekView" aria-label="Wochenansicht"></section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="panel" id="modal" style="position:fixed; inset:0; margin:0; padding:0; background:rgba(15,23,42,.35); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:18px; padding:18px; width:520px; max-width:calc(100% - 40px); box-shadow:var(--shadow); border:1px solid var(--line);">
+      <div class="sectionHeader">
+        <h3 id="modalTitle">Termin erfassen</h3>
+        <button class="btn icon" id="closeModal" aria-label="Schließen">✕</button>
+      </div>
+      <div class="formGrid">
+        <div class="field">
+          <label for="titleInput">Titel</label>
+          <input id="titleInput" type="text" placeholder="z.B. Training" />
+        </div>
+        <div class="field">
+          <label for="groupInput">Gruppe</label>
+          <select id="groupInput"></select>
+        </div>
+        <div class="field">
+          <label for="startInput">Beginn</label>
+          <input id="startInput" type="datetime-local" />
+        </div>
+        <div class="field">
+          <label for="endInput">Ende</label>
+          <input id="endInput" type="datetime-local" />
+        </div>
+        <div class="field">
+          <label for="locationInput">Ort</label>
+          <input id="locationInput" type="text" placeholder="Halle, Platz, ..." />
+        </div>
+        <div class="field" style="grid-column:1/-1;">
+          <label for="noteInput">Notiz</label>
+          <textarea id="noteInput" placeholder="Optional"></textarea>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px;">
+        <button class="btn" id="deleteBtn">Löschen</button>
+        <button class="btn" id="cancelBtn">Abbrechen</button>
+        <button class="btn primary" id="saveBtn">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const groups = ["U11","U13","U15","U18","U21","Senioren","JSL","Jugend","Große"];
+    const views = [
+      {id:"year", label:"Jahresüberblick"},
+      {id:"list", label:"Liste"},
+      {id:"month", label:"Monat"},
+      {id:"week", label:"Woche"}
+    ];
+
+    let state = {
+      events: [
+        {id: crypto.randomUUID(), title:"Hallentraining", group:"U15", start:"2024-02-05T18:00", end:"2024-02-05T20:00", location:"Halle Nord", note:"Coach Alex"},
+        {id: crypto.randomUUID(), title:"Testspiel", group:"Senioren", start:"2024-02-10T15:00", end:"2024-02-10T17:00", location:"Stadion", note:"Gegner: SV Blau"},
+        {id: crypto.randomUUID(), title:"Athletik", group:"Jugend", start:"2024-02-07T17:30", end:"2024-02-07T19:00", location:"Kraftraum"},
+        {id: crypto.randomUUID(), title:"Camp", group:"U13", start:"2024-03-01T10:00", end:"2024-03-03T15:00", location:"Sportschule", note:"Übernachtung"}
+      ],
+      view: "month",
+      cursor: new Date(),
+      selectedId: null
+    };
+
+    const viewTabs = document.getElementById('viewTabs');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const todayBtn = document.getElementById('todayBtn');
+    const titleEl = document.getElementById('title');
+    const yearView = document.getElementById('yearView');
+    const listView = document.getElementById('listView');
+    const monthView = document.getElementById('monthView');
+    const weekView = document.getElementById('weekView');
+    const statGrid = document.getElementById('statGrid');
+    const groupPills = document.getElementById('groupPills');
+    const importBtn = document.getElementById('importBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const importInput = document.getElementById('importInput');
+    const toastEl = document.getElementById('toast');
+    const newBtn = document.getElementById('newBtn');
+
+    const modal = document.getElementById('modal');
+    const titleInput = document.getElementById('titleInput');
+    const groupInput = document.getElementById('groupInput');
+    const startInput = document.getElementById('startInput');
+    const endInput = document.getElementById('endInput');
+    const locationInput = document.getElementById('locationInput');
+    const noteInput = document.getElementById('noteInput');
+    const saveBtn = document.getElementById('saveBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const closeModal = document.getElementById('closeModal');
+    const modalTitle = document.getElementById('modalTitle');
+
+    // Build view tabs
+    views.forEach(v=>{
+      const b = document.createElement('button');
+      b.className = 'btn ghost';
+      b.textContent = v.label;
+      b.dataset.view = v.id;
+      b.addEventListener('click', ()=>{
+        state.view = v.id;
+        render();
+      });
+      viewTabs.appendChild(b);
+    });
+
+    groups.forEach(g=>{
+      const pill = document.createElement('span');
+      pill.className = 'pill';
+      pill.textContent = g;
+      groupPills.appendChild(pill);
+
+      const opt = document.createElement('option');
+      opt.value = g; opt.textContent = g;
+      groupInput.appendChild(opt);
+    });
+
+    function formatMonth(date){
+      return date.toLocaleDateString('de-DE', {month:'long', year:'numeric'});
+    }
+    function formatDay(date){
+      return date.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit', month:'2-digit'});
+    }
+    function startOfWeek(date){
+      const d = new Date(date);
+      const day = d.getDay();
+      const diff = (day === 0 ? -6 : 1) - day; // Monday first
+      d.setDate(d.getDate() + diff);
+      d.setHours(0,0,0,0);
+      return d;
+    }
+    function addDays(date,n){
+      const d = new Date(date); d.setDate(d.getDate()+n); return d;
+    }
+    function sameDay(a,b){
+      return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+    }
+    function eventRangeIncludes(ev, date){
+      const s = new Date(ev.start); const e = new Date(ev.end); const d = new Date(date);
+      d.setHours(12,0,0,0);
+      return d >= stripTime(s) && d <= stripTime(e);
+    }
+    function stripTime(d){ const x = new Date(d); x.setHours(0,0,0,0); return x; }
+
+    function render(){
+      document.querySelectorAll('.viewTabs .btn').forEach(btn=>{
+        btn.classList.toggle('active', btn.dataset.view === state.view);
+      });
+      const cursor = new Date(state.cursor);
+      if (state.view === 'year'){
+        titleEl.innerHTML = `<b>${cursor.getFullYear()}</b>`;
+      } else {
+        titleEl.innerHTML = `<small>${cursor.toLocaleDateString('de-DE',{weekday:'long'})}</small> <b>${formatMonth(cursor)}</b>`;
+      }
+      renderStats();
+      renderYear();
+      renderList();
+      renderMonth();
+      renderWeek();
+      yearView.classList.toggle('hidden', state.view !== 'year');
+      listView.classList.toggle('hidden', state.view !== 'list');
+      monthView.classList.toggle('hidden', state.view !== 'month');
+      weekView.classList.toggle('hidden', state.view !== 'week');
+    }
+
+    function renderStats(){
+      const thisMonth = new Date(state.cursor);
+      const startMonth = new Date(thisMonth.getFullYear(), thisMonth.getMonth(), 1);
+      const endMonth = new Date(thisMonth.getFullYear(), thisMonth.getMonth()+1, 0);
+      const monthEvents = state.events.filter(ev=>eventRangeIncludes(ev, startMonth) || eventRangeIncludes(ev, endMonth) || (new Date(ev.start) >= startMonth && new Date(ev.start) <= endMonth));
+      const next7 = state.events.filter(ev=>{
+        const today = stripTime(new Date());
+        const in7 = addDays(today,7);
+        const s = stripTime(new Date(ev.start));
+        return s >= today && s <= in7;
+      });
+      statGrid.innerHTML = '';
+      const stats = [
+        {label:'Termine im Monat', value: monthEvents.length},
+        {label:'Nächste 7 Tage', value: next7.length},
+        {label:'Gruppen', value: groups.length}
+      ];
+      stats.forEach(s=>{
+        const div = document.createElement('div');
+        div.className = 'stat';
+        div.innerHTML = `<div class="muted">${s.label}</div><div class="kpi">${s.value}</div>`;
+        statGrid.appendChild(div);
+      });
+    }
+
+    function renderYear(){
+      const year = state.cursor.getFullYear();
+      yearView.innerHTML = `<div class="sectionHeader"><h3>${year} – Jahresüberblick</h3><span class="muted">Kompakte Monatskarten</span></div>`;
+      const grid = document.createElement('div');
+      grid.className = 'yearGrid';
+      for(let m=0;m<12;m++){
+        const card = document.createElement('div');
+        card.className = 'monthCard';
+        const monthDate = new Date(year,m,1);
+        const label = monthDate.toLocaleDateString('de-DE',{month:'long'});
+        const evs = state.events.filter(ev=>{
+          const s = new Date(ev.start);
+          return s.getFullYear()===year && s.getMonth()===m;
+        });
+        const head = document.createElement('div');
+        head.style.display='flex'; head.style.justifyContent='space-between';
+        head.innerHTML = `<strong>${label}</strong><span class="muted">${evs.length} Termine</span>`;
+        const mini = document.createElement('div'); mini.className='miniCal';
+        const days = new Date(year, m+1, 0).getDate();
+        for(let d=1; d<=days; d++){
+          const cell = document.createElement('span');
+          const has = evs.some(ev=> eventRangeIncludes(ev, new Date(year,m,d)));
+          cell.textContent = d;
+          if(has) cell.classList.add('hasEvent');
+          mini.appendChild(cell);
+        }
+        card.appendChild(head);
+        card.appendChild(mini);
+        grid.appendChild(card);
+      }
+      yearView.appendChild(grid);
+    }
+
+    function renderList(){
+      listView.innerHTML = `<div class="sectionHeader"><h3>Liste</h3><span class="muted">Alle Termine chronologisch</span></div>`;
+      const sorted = [...state.events].sort((a,b)=> new Date(a.start) - new Date(b.start));
+      sorted.forEach(ev=>{
+        const row = document.createElement('div');
+        row.className = 'listRow';
+        row.innerHTML = `
+          <div>
+            <div class="title">${ev.title}</div>
+            <div class="meta">${ev.group} · ${ev.location || 'Ort folgt'}</div>
+          </div>
+          <div class="meta">${formatDay(new Date(ev.start))} – ${new Date(ev.start).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</div>
+        `;
+        row.addEventListener('click', ()=>openModal(ev.id));
+        listView.appendChild(row);
+      });
+    }
+
+    function renderMonth(){
+      const year = state.cursor.getFullYear();
+      const month = state.cursor.getMonth();
+      const days = new Date(year, month+1, 0).getDate();
+      const header = document.createElement('div');
+      header.className = 'sectionHeader';
+      header.innerHTML = `<h3>Monatsansicht</h3><span class="muted">Spalten = Tage, Zeilen = Gruppen</span>`;
+      const table = document.createElement('table');
+      table.className = 'calendar';
+      const thead = document.createElement('thead');
+      const headRow = document.createElement('tr');
+      const spacer = document.createElement('th'); spacer.textContent='Gruppe'; spacer.className='groupCell'; headRow.appendChild(spacer);
+      for(let d=1; d<=days; d++){
+        const th = document.createElement('th');
+        const date = new Date(year, month, d);
+        th.innerHTML = `${d}.<br><small>${date.toLocaleDateString('de-DE',{weekday:'short'})}</small>`;
+        headRow.appendChild(th);
+      }
+      thead.appendChild(headRow); table.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      groups.forEach(g=>{
+        const tr = document.createElement('tr');
+        const th = document.createElement('th');
+        th.textContent = g; th.className='groupCell';
+        tr.appendChild(th);
+        for(let d=1; d<=days; d++){
+          const td = document.createElement('td');
+          const date = new Date(year, month, d);
+          state.events.filter(ev=>ev.group===g && eventRangeIncludes(ev, date)).forEach(ev=>{
+            const chip = document.createElement('span');
+            chip.className = 'eventChip';
+            chip.innerHTML = `<strong>${ev.title}</strong><small>${ev.location || 'Ort folgt'}</small>`;
+            chip.addEventListener('click', ()=> openModal(ev.id));
+            td.appendChild(chip);
+          });
+          td.addEventListener('dblclick', ()=>openModal(null, {group:g, date}));
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      monthView.innerHTML = '';
+      monthView.appendChild(header);
+      monthView.appendChild(table);
+    }
+
+    function renderWeek(){
+      const start = startOfWeek(state.cursor);
+      const header = document.createElement('div');
+      header.className='sectionHeader';
+      header.innerHTML = `<h3>Wochenansicht</h3><span class="muted">Fokus auf ${formatDay(start)} – ${formatDay(addDays(start,6))}</span>`;
+      const table = document.createElement('table');
+      table.className = 'calendar';
+      const thead = document.createElement('thead');
+      const row = document.createElement('tr');
+      const spacer = document.createElement('th'); spacer.textContent='Gruppe'; spacer.className='groupCell'; row.appendChild(spacer);
+      for(let i=0;i<7;i++){
+        const d = addDays(start,i);
+        const th = document.createElement('th');
+        th.innerHTML = `${d.getDate()}.<br><small>${d.toLocaleDateString('de-DE',{weekday:'short'})}</small>`;
+        row.appendChild(th);
+      }
+      thead.appendChild(row); table.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      groups.forEach(g=>{
+        const tr = document.createElement('tr');
+        const gh = document.createElement('th'); gh.textContent = g; gh.className='groupCell'; tr.appendChild(gh);
+        for(let i=0;i<7;i++){
+          const date = addDays(start,i);
+          const td = document.createElement('td');
+          state.events.filter(ev=>ev.group===g && eventRangeIncludes(ev,date)).forEach(ev=>{
+            const chip = document.createElement('span');
+            chip.className='eventChip';
+            chip.innerHTML = `<strong>${ev.title}</strong><small>${ev.location || 'Ort folgt'}</small>`;
+            chip.addEventListener('click', ()=>openModal(ev.id));
+            td.appendChild(chip);
+          });
+          td.addEventListener('dblclick', ()=>openModal(null,{group:g,date}));
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      weekView.innerHTML = '';
+      weekView.appendChild(header);
+      weekView.appendChild(table);
+    }
+
+    function openModal(id, prefill){
+      state.selectedId = id;
+      modal.style.display = 'flex';
+      if(id){
+        const ev = state.events.find(e=>e.id===id);
+        modalTitle.textContent = 'Termin bearbeiten';
+        titleInput.value = ev.title;
+        groupInput.value = ev.group;
+        startInput.value = ev.start;
+        endInput.value = ev.end;
+        locationInput.value = ev.location || '';
+        noteInput.value = ev.note || '';
+        deleteBtn.style.display='inline-flex';
+      } else {
+        modalTitle.textContent = 'Termin erfassen';
+        titleInput.value = '';
+        groupInput.value = prefill?.group || groups[0];
+        const base = prefill?.date || new Date(state.cursor);
+        const iso = base.toISOString().slice(0,16);
+        startInput.value = iso;
+        endInput.value = iso;
+        locationInput.value = '';
+        noteInput.value = '';
+        deleteBtn.style.display='none';
+      }
+    }
+    function closeModalPanel(){ modal.style.display='none'; }
+
+    saveBtn.addEventListener('click', ()=>{
+      const payload = {
+        title: titleInput.value.trim(),
+        group: groupInput.value,
+        start: startInput.value,
+        end: endInput.value,
+        location: locationInput.value.trim(),
+        note: noteInput.value.trim()
+      };
+      if(!payload.title || !payload.start || !payload.end){
+        return toast('Bitte alle Pflichtfelder ausfüllen.');
+      }
+      if(new Date(payload.start) > new Date(payload.end)){
+        return toast('Ende liegt vor dem Beginn.');
+      }
+      if(state.selectedId){
+        const ev = state.events.find(e=>e.id===state.selectedId);
+        Object.assign(ev, payload);
+        toast('Termin aktualisiert');
+      } else {
+        state.events.push({id: crypto.randomUUID(), ...payload});
+        toast('Termin angelegt');
+      }
+      closeModalPanel();
+      render();
+    });
+
+    deleteBtn.addEventListener('click', ()=>{
+      if(!state.selectedId) return;
+      state.events = state.events.filter(e=>e.id!==state.selectedId);
+      closeModalPanel();
+      render();
+      toast('Termin gelöscht');
+    });
+
+    cancelBtn.addEventListener('click', closeModalPanel);
+    closeModal.addEventListener('click', closeModalPanel);
+
+    prevBtn.addEventListener('click', ()=>{
+      const d = new Date(state.cursor);
+      if(state.view==='year') d.setFullYear(d.getFullYear()-1);
+      else if(state.view==='month') d.setMonth(d.getMonth()-1);
+      else d.setDate(d.getDate()-7);
+      state.cursor = d; render();
+    });
+    nextBtn.addEventListener('click', ()=>{
+      const d = new Date(state.cursor);
+      if(state.view==='year') d.setFullYear(d.getFullYear()+1);
+      else if(state.view==='month') d.setMonth(d.getMonth()+1);
+      else d.setDate(d.getDate()+7);
+      state.cursor = d; render();
+    });
+    todayBtn.addEventListener('click', ()=>{ state.cursor = new Date(); render(); });
+
+    newBtn.addEventListener('click', ()=>openModal());
+
+    importBtn.addEventListener('click', ()=>importInput.click());
+    importInput.addEventListener('change', (e)=>{
+      const file = e.target.files?.[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        try{
+          const data = JSON.parse(reader.result);
+          if(Array.isArray(data)){
+            state.events = data.map(ev=>({id: ev.id || crypto.randomUUID(), ...ev}));
+            render();
+            toast('Import abgeschlossen');
+          } else {
+            toast('JSON erwartet ein Array.');
+          }
+        } catch(err){
+          toast('Import fehlgeschlagen');
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    exportBtn.addEventListener('click', ()=>{
+      const blob = new Blob([JSON.stringify(state.events, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'vereinskalender.json'; a.click();
+      URL.revokeObjectURL(url);
+      toast('Export erstellt');
+    });
+
+    function toast(msg){
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      setTimeout(()=> toastEl.classList.remove('show'), 2600);
+    }
+
+    window.addEventListener('keydown', (e)=>{
+      if(e.key==='Escape') closeModalPanel();
+      if(e.key==='ArrowLeft' && document.activeElement===document.body) prevBtn.click();
+      if(e.key==='ArrowRight' && document.activeElement===document.body) nextBtn.click();
+    });
+
+    render();
+  </script>
+</body>
+</html>
