@@ -2,3 +2,5 @@
 /storage/emails/*.log
 /storage/documents/*.pdf
 .DS_Store
+.DS_Store
+.DS_Store
