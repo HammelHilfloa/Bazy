@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monatskalender – Feiertage & Ferien NRW</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>Monatskalender</h1>
+          <div class="sub">Feiertage & Schulferien (NRW)</div>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="btn icon" id="prevBtn" aria-label="Vorheriger Monat">◀</button>
+        <div class="monthTitle"><b id="monthLabel"></b></div>
+        <button class="btn icon" id="nextBtn" aria-label="Nächster Monat">▶</button>
+        <button class="btn" id="todayBtn">Heute</button>
+      </div>
+    </header>
+
+    <section class="calendar-panel">
+      <div class="calendar-grid" aria-label="Monatskalender">
+        <div class="dow">Mo</div>
+        <div class="dow">Di</div>
+        <div class="dow">Mi</div>
+        <div class="dow">Do</div>
+        <div class="dow">Fr</div>
+        <div class="dow">Sa</div>
+        <div class="dow">So</div>
+        <div id="weeks"></div>
+      </div>
+      <div class="legend">
+        <span class="pill"><span class="dot holiday"></span> Feiertag</span>
+        <span class="pill"><span class="dot ferien"></span> Schulferien</span>
+        <span id="status" class="status"></span>
+      </div>
+    </section>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
