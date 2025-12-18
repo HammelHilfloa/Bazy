@@ -4,10 +4,10 @@
  */
 function get_pdo(): PDO
 {
-    $host = getenv('DB_HOST') ?: 'localhost';
-    $db   = getenv('DB_NAME') ?: 'calendar';
-    $user = getenv('DB_USER') ?: 'root';
-    $pass = getenv('DB_PASS') ?: '';
+    $host = getenv('DB_HOST') ?: 'mysqle9d0.netcup.net';
+    $db   = getenv('DB_NAME') ?: 'k320481_calender';
+    $user = getenv('DB_USER') ?: 'k320481_cal';
+    $pass = getenv('DB_PASS') ?: 'Sas!230188';
     $charset = 'utf8mb4';
 
     $dsn = "mysql:host={$host};dbname={$db};charset={$charset}";
