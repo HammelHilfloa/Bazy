@@ -1,5 +1,4 @@
--- Basistabellen aus der Demo (Gruppen + Events)
-CREATE TABLE IF NOT EXISTS groups (
+CREATE TABLE IF NOT EXISTS `groups` (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(64) NOT NULL UNIQUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -16,11 +15,11 @@ CREATE TABLE IF NOT EXISTS events (
   notes TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT fk_events_group FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
+  CONSTRAINT fk_events_group FOREIGN KEY (group_id) REFERENCES `groups`(id) ON DELETE CASCADE,
   CONSTRAINT chk_date_range CHECK (end_at >= start_at)
 );
 
-INSERT INTO groups (name) VALUES
+INSERT INTO `groups` (name) VALUES
   ('U11'), ('U13'), ('U15'), ('U18'), ('U21'), ('Senioren'), ('JSL'), ('Jugend'), ('Große')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
