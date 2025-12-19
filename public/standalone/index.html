@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Standalone Kalender – JSON Edition</title>
+  <link rel="stylesheet" href="./standalone.css">
+</head>
+<body>
+  <div class="standalone-app">
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-mark">2026</div>
+        <div>
+          <p class="eyebrow">Standalone</p>
+          <h1>Vereinskalender</h1>
+          <p class="meta" id="datasetMeta">Lade Daten …</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="view-switch" role="tablist" aria-label="Ansicht wechseln">
+          <button class="pill" data-view="matrix" role="tab" aria-selected="true">Monatsmatrix</button>
+          <button class="pill" data-view="calendar" role="tab" aria-selected="false">Kalenderblatt</button>
+          <button class="pill" data-view="week" role="tab" aria-selected="false">Woche</button>
+          <button class="pill" data-view="groups" role="tab" aria-selected="false">Gruppenliste</button>
+          <button class="pill" data-view="year" role="tab" aria-selected="false">Jahresübersicht</button>
+        </div>
+        <div class="actions">
+          <div class="month-switch" aria-label="Monat wechseln">
+            <button class="ghost" id="prevBtn" aria-label="Vorheriger Zeitraum">◀</button>
+            <div id="monthLabel" class="label">–</div>
+            <button class="ghost" id="nextBtn" aria-label="Nächster Zeitraum">▶</button>
+          </div>
+          <button class="primary" id="addEventBtn">+ Neuer Termin</button>
+        </div>
+      </div>
+    </header>
+
+    <section id="statusBar" class="status">Lade Kalender …</section>
+
+    <main class="views">
+      <section id="matrixView" class="view" aria-label="Monatsübersicht als Matrix"></section>
+      <section id="calendarView" class="view" aria-label="Kalenderblatt"></section>
+      <section id="weekView" class="view" aria-label="Wochenübersicht"></section>
+      <section id="groupView" class="view" aria-label="Gruppenübersicht"></section>
+      <section id="yearView" class="view" aria-label="Jahresübersicht"></section>
+    </main>
+  </div>
+
+  <div id="eventOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="overlayTitle">
+    <div class="overlay-card">
+      <header class="overlay-header">
+        <div>
+          <p class="eyebrow">Termin</p>
+          <h2 id="overlayTitle">Neuer Termin</h2>
+        </div>
+        <button class="ghost" id="closeOverlay" aria-label="Schließen">✕</button>
+      </header>
+      <form id="eventForm" class="overlay-form">
+        <label>
+          Titel
+          <input type="text" name="title" required placeholder="z. B. Training">
+        </label>
+        <label>
+          Datum
+          <input type="date" name="date" required>
+        </label>
+        <label>
+          Gruppe
+          <input type="text" name="group" list="groupOptions" required placeholder="Gruppe wählen oder neu eingeben">
+          <datalist id="groupOptions"></datalist>
+        </label>
+        <label>
+          Farbe (Hex)
+          <input type="text" name="color" placeholder="#2563eb">
+        </label>
+        <label>
+          Notizen
+          <textarea name="notes" rows="3" placeholder="Ort, Besonderheiten …"></textarea>
+        </label>
+        <div class="overlay-actions">
+          <div class="left">
+            <button type="button" class="ghost" id="deleteEventBtn" aria-label="Termin löschen">Löschen</button>
+          </div>
+          <div class="right">
+            <button type="button" class="ghost" id="cancelOverlay">Abbrechen</button>
+            <button type="submit" class="primary">Speichern</button>
+          </div>
+        </div>
+        <p class="form-status" id="overlayStatus"></p>
+      </form>
+    </div>
+  </div>
+
+  <script src="./standalone.js"></script>
+</body>
+</html>
