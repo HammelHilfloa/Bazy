@@ -4,6 +4,8 @@ $config = require __DIR__ . '/../../lib/bootstrap.php';
 require_once __DIR__ . '/../../lib/Db.php';
 require_once __DIR__ . '/../../lib/Response.php';
 require_once __DIR__ . '/../../lib/Auth.php';
+require_once __DIR__ . '/../../lib/Csrf.php';
+require_once __DIR__ . '/../../lib/AuditLog.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     Response::jsonError('Methode nicht erlaubt.', 405);
@@ -30,6 +32,11 @@ if ($username === '' || $password === '') {
 try {
     $pdo = Db::getConnection($config);
     $user = Auth::login($pdo, $username, $password);
+    AuditLog::record($pdo, 'user', (string) $user['id'], 'login', $user['id'], null, [
+        'username' => $user['username'],
+        'role' => $user['role'],
+        'logged_in_at' => date('c'),
+    ]);
     Response::jsonSuccess([
         'user' => [
             'id' => $user['id'],
