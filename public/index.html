@@ -13,7 +13,7 @@
         <div class="logo"></div>
         <div>
           <h1>Monatskalender</h1>
-          <div class="sub">Feiertage & Schulferien (NRW)</div>
+          <div class="sub">Feiertage &amp; Schulferien (NRW) + Vereinstermine</div>
         </div>
       </div>
       <div class="controls">
@@ -24,23 +24,73 @@
       </div>
     </header>
 
-    <section class="calendar-panel">
-      <div class="calendar-grid" aria-label="Monatskalender">
-        <div class="dow">Mo</div>
-        <div class="dow">Di</div>
-        <div class="dow">Mi</div>
-        <div class="dow">Do</div>
-        <div class="dow">Fr</div>
-        <div class="dow">Sa</div>
-        <div class="dow">So</div>
-        <div id="weeks"></div>
-      </div>
-      <div class="legend">
-        <span class="pill"><span class="dot holiday"></span> Feiertag</span>
-        <span class="pill"><span class="dot ferien"></span> Schulferien</span>
-        <span id="status" class="status"></span>
-      </div>
-    </section>
+    <main class="layout">
+      <section class="calendar-panel">
+        <div class="calendar-grid" aria-label="Monatskalender">
+          <div class="dow">Mo</div>
+          <div class="dow">Di</div>
+          <div class="dow">Mi</div>
+          <div class="dow">Do</div>
+          <div class="dow">Fr</div>
+          <div class="dow">Sa</div>
+          <div class="dow">So</div>
+          <div id="weeks"></div>
+        </div>
+        <div class="legend">
+          <span class="pill"><span class="dot holiday"></span> Feiertag</span>
+          <span class="pill"><span class="dot ferien"></span> Schulferien</span>
+          <span class="pill"><span class="dot event"></span> Termin</span>
+          <span id="status" class="status"></span>
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <section class="panel">
+          <header class="panel-header">Kategorien</header>
+          <div id="groupsList" class="pill-list">Lade Gruppen …</div>
+          <div id="groupsStatus" class="status"></div>
+        </section>
+
+        <section class="panel">
+          <header class="panel-header">Neuen Termin anlegen</header>
+          <form id="eventForm" class="form">
+            <label>
+              Titel
+              <input type="text" name="title" required placeholder="z. B. Training">
+            </label>
+            <label>
+              Gruppe
+              <select name="group_id" required id="groupSelect"></select>
+            </label>
+            <div class="two-cols">
+              <label>
+                Start
+                <input type="datetime-local" name="start_at" required>
+              </label>
+              <label>
+                Ende
+                <input type="datetime-local" name="end_at" required>
+              </label>
+            </div>
+            <label>
+              Ort (optional)
+              <input type="text" name="location" placeholder="Halle, Platz …">
+            </label>
+            <label>
+              Notizen (optional)
+              <textarea name="notes" rows="2" placeholder="Mitbringen: …"></textarea>
+            </label>
+            <button class="btn full" type="submit">Termin speichern</button>
+            <div id="eventStatus" class="status"></div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <header class="panel-header">Termine in diesem Monat</header>
+          <div id="monthEvents" class="event-list"></div>
+        </section>
+      </aside>
+    </main>
   </div>
 
   <script src="./app.js"></script>
