@@ -329,6 +329,9 @@ $appName = htmlspecialchars($config['app_name'] ?? 'Vereinskalender', ENT_QUOTES
             </div>
             <div class="top-actions">
                 <span class="muted">Angemeldet als <strong><?php echo htmlspecialchars($currentUser['username'] ?? '', ENT_QUOTES, 'UTF-8'); ?></strong> (<?php echo htmlspecialchars($currentUser['role'] ?? '', ENT_QUOTES, 'UTF-8'); ?>)</span>
+                <?php if (in_array($currentUser['role'] ?? '', ['admin', 'editor'], true)) : ?>
+                    <a class="btn-secondary" href="<?php echo htmlspecialchars($baseUrl . '/app/json_tools.php', ENT_QUOTES, 'UTF-8'); ?>">JSON-Tools</a>
+                <?php endif; ?>
                 <button id="btn-logout" class="btn-secondary" type="button">Abmelden</button>
                 <button id="btn-new-event" class="btn-primary" type="button">Neuer Termin</button>
             </div>
