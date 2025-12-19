@@ -12,7 +12,7 @@ try {
     $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     match ($method) {
         'GET' => respond(loadCalendar()),
-        'POST' => handleUpsert(),
+        'POST' => handlePost(),
         'DELETE' => handleDelete(),
         default => respondError(405, 'Methode nicht erlaubt'),
     };
@@ -65,15 +65,30 @@ function saveCalendar(array $data): void
     }
 }
 
-function handleUpsert(): void
+function handlePost(): void
 {
     $payload = json_decode(file_get_contents('php://input') ?: 'null', true);
-    if (!is_array($payload) || !isset($payload['event']) || !is_array($payload['event'])) {
-        respondError(400, 'Es wurde kein gültiges Event gesendet');
+    if (!is_array($payload)) {
+        respondError(400, 'Kein gültiger JSON-Body gesendet');
     }
 
+    if (array_key_exists('import', $payload)) {
+        handleImport($payload['import']);
+        return;
+    }
+
+    if (isset($payload['event']) && is_array($payload['event'])) {
+        handleUpsert($payload['event']);
+        return;
+    }
+
+    respondError(400, 'Es wurde kein gültiges Event gesendet');
+}
+
+function handleUpsert(array $eventPayload): void
+{
     $calendar = loadCalendar();
-    $event = normalizeEvent($payload['event']);
+    $event = normalizeEvent($eventPayload);
 
     if (!in_array($event['group'], $calendar['groups'], true)) {
         $calendar['groups'][] = $event['group'];
@@ -84,6 +99,39 @@ function handleUpsert(): void
 
     saveCalendar($calendar);
     respond(['calendar' => $calendar, 'event' => $event]);
+}
+
+function handleImport($rawImport): void
+{
+    if (!is_array($rawImport)) {
+        respondError(400, 'Importdaten fehlen oder sind ungültig');
+    }
+
+    $incomingEvents = extractImportEvents($rawImport);
+    if ($incomingEvents === []) {
+        respondError(400, 'Keine Events in der Import-Datei gefunden');
+    }
+
+    $normalizedEvents = array_map('normalizeEvent', $incomingEvents);
+
+    $calendar = loadCalendar();
+    $calendar['events'] = mergeEvents($calendar['events'], $normalizedEvents);
+    $calendar['groups'] = mergeGroups($calendar['groups'], extractGroups($rawImport, $normalizedEvents));
+
+    if (isset($rawImport['year']) && (int) $rawImport['year'] > 0) {
+        $calendar['year'] = (int) $rawImport['year'];
+    }
+    if (isset($rawImport['source']) && is_string($rawImport['source'])) {
+        $calendar['source'] = trim($rawImport['source']);
+    }
+
+    $calendar['updatedAt'] = nowIso();
+
+    saveCalendar($calendar);
+    respond([
+        'calendar' => $calendar,
+        'imported' => count($normalizedEvents),
+    ]);
 }
 
 function handleDelete(): void
@@ -156,6 +204,63 @@ function upsertEvent(array $events, array $event): array
     });
 
     return $filtered;
+}
+
+function mergeEvents(array $existing, array $incoming): array
+{
+    $byId = [];
+    foreach ($existing as $event) {
+        $byId[$event['id'] ?? generateId()] = $event;
+    }
+    foreach ($incoming as $event) {
+        $byId[$event['id']] = $event;
+    }
+
+    $merged = array_values($byId);
+    usort($merged, static function (array $a, array $b): int {
+        return strcmp($a['date'] ?? '', $b['date'] ?? '');
+    });
+
+    return $merged;
+}
+
+function mergeGroups(array $existing, array $incoming): array
+{
+    $all = array_merge($existing, $incoming);
+    $unique = array_values(array_unique(array_map('trim', $all)));
+    sort($unique, SORT_NATURAL | SORT_FLAG_CASE);
+    return $unique;
+}
+
+function extractImportEvents(array $import): array
+{
+    if (isset($import['events']) && is_array($import['events'])) {
+        return $import['events'];
+    }
+
+    // Fallback: wenn die Datei direkt ein Array von Events enthält
+    $isFlatEvents = array_keys($import) === range(0, count($import) - 1);
+    if ($isFlatEvents && isset($import[0]['date'])) {
+        return $import;
+    }
+
+    return [];
+}
+
+function extractGroups(array $import, array $events): array
+{
+    $groups = [];
+    if (isset($import['groups']) && is_array($import['groups'])) {
+        $groups = $import['groups'];
+    }
+
+    foreach ($events as $event) {
+        if (isset($event['group'])) {
+            $groups[] = $event['group'];
+        }
+    }
+
+    return $groups;
 }
 
 function nowIso(): string

@@ -26,6 +26,8 @@ function bindUi() {
   document.getElementById('cancelOverlay').addEventListener('click', closeOverlay);
   document.getElementById('eventForm').addEventListener('submit', handleFormSubmit);
   document.getElementById('deleteEventBtn').addEventListener('click', handleDeleteEvent);
+  document.getElementById('importJsonBtn').addEventListener('click', triggerImport);
+  document.getElementById('importFile').addEventListener('change', handleImportFile);
 }
 
 async function loadCalendar() {
@@ -535,6 +537,37 @@ function setStatus(message, type = 'neutral') {
   bar.classList.remove('error', 'success');
   if (type === 'error') bar.classList.add('error');
   if (type === 'success') bar.classList.add('success');
+}
+
+function triggerImport() {
+  document.getElementById('importFile').click();
+}
+
+async function handleImportFile(event) {
+  const [file] = event.target.files || [];
+  event.target.value = '';
+  if (!file) return;
+
+  try {
+    setStatus(`Importiere ${file.name} …`);
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    const res = await fetch('./api/calendar.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ import: parsed }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      throw new Error(data.error || `HTTP ${res.status}`);
+    }
+    state.calendar = data.calendar;
+    render();
+    setStatus(`Import abgeschlossen (${data.imported} Events)`, 'success');
+  } catch (err) {
+    console.error(err);
+    setStatus('Import fehlgeschlagen. Bitte Datei prüfen.', 'error');
+  }
 }
 
 function createCell(text, className) {
