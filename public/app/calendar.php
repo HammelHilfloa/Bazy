@@ -799,11 +799,16 @@ $appName = htmlspecialchars($config['app_name'] ?? 'Vereinskalender', ENT_QUOTES
                 detailSeries.style.display = 'none';
             }
 
-            btnDetailEdit.hidden = !canEdit;
-            btnDetailDelete.hidden = !canEdit;
-            btnDetailOccurrenceEdit.hidden = !(canEdit && currentEventData.is_series);
-            btnDetailSeriesEdit.hidden = !(canEdit && currentEventData.is_series);
-            btnDetailOccurrenceCancel.hidden = !(canEdit && currentEventData.is_series);
+            const isSystemEvent = currentEventData.source && currentEventData.source !== 'manual';
+            if (isSystemEvent) {
+                setStatus(detailStatus, 'Systemtermin (nicht bearbeitbar).', true);
+            }
+
+            btnDetailEdit.hidden = !canEdit || isSystemEvent;
+            btnDetailDelete.hidden = !canEdit || isSystemEvent;
+            btnDetailOccurrenceEdit.hidden = !(canEdit && currentEventData.is_series) || isSystemEvent;
+            btnDetailSeriesEdit.hidden = !(canEdit && currentEventData.is_series) || isSystemEvent;
+            btnDetailOccurrenceCancel.hidden = !(canEdit && currentEventData.is_series) || isSystemEvent;
         }
 
         async function apiPost(url, payload) {
@@ -1034,6 +1039,10 @@ $appName = htmlspecialchars($config['app_name'] ?? 'Vereinskalender', ENT_QUOTES
         async function handleSave() {
             resetStatus(formStatus);
             try {
+                if (formMode.action === 'edit' && formMode.baseEvent?.source && formMode.baseEvent.source !== 'manual') {
+                    throw new Error('Systemtermine können nicht bearbeitet werden.');
+                }
+
                 if (activeTab === 'single') {
                     const payload = collectSinglePayload();
                     if (formMode.action === 'edit' && formMode.baseEvent) {
@@ -1065,6 +1074,10 @@ $appName = htmlspecialchars($config['app_name'] ?? 'Vereinskalender', ENT_QUOTES
         async function deleteEvent(event) {
             resetStatus(detailStatus);
             try {
+                if (event.source && event.source !== 'manual') {
+                    throw new Error('Systemtermine können nicht gelöscht werden.');
+                }
+
                 if (event.is_series) {
                     const res = await apiPost(endpoints.overrideCancel, { series_id: event.series_id, occurrence_start: event.occurrence_start });
                     if (!res.success) throw new Error(res.error || 'Vorkommen konnte nicht abgesagt werden.');
@@ -1096,6 +1109,10 @@ $appName = htmlspecialchars($config['app_name'] ?? 'Vereinskalender', ENT_QUOTES
         async function saveOccurrenceEdit(event) {
             resetStatus(formStatus);
             try {
+                if (event.source && event.source !== 'manual') {
+                    throw new Error('Systemtermine können nicht bearbeitet werden.');
+                }
+
                 const payload = collectOccurrencePayload(event);
                 const res = await apiPost(endpoints.overrideModify, payload);
                 if (!res.success) throw new Error(res.error || 'Speichern fehlgeschlagen.');
@@ -1200,6 +1217,10 @@ $appName = htmlspecialchars($config['app_name'] ?? 'Vereinskalender', ENT_QUOTES
         });
         btnDetailEdit.addEventListener('click', () => {
             if (!currentEventData) return;
+            if (currentEventData.source && currentEventData.source !== 'manual') {
+                setStatus(detailStatus, 'Systemtermine können nicht bearbeitet werden.', true);
+                return;
+            }
             if (currentEventData.is_series) {
                 fillSeriesForm(currentEventData);
             } else {
@@ -1208,10 +1229,18 @@ $appName = htmlspecialchars($config['app_name'] ?? 'Vereinskalender', ENT_QUOTES
         });
         btnDetailSeriesEdit.addEventListener('click', () => {
             if (!currentEventData) return;
+            if (currentEventData.source && currentEventData.source !== 'manual') {
+                setStatus(detailStatus, 'Systemtermine können nicht bearbeitet werden.', true);
+                return;
+            }
             fillSeriesForm(currentEventData);
         });
         btnDetailOccurrenceEdit.addEventListener('click', () => {
             if (!currentEventData) return;
+            if (currentEventData.source && currentEventData.source !== 'manual') {
+                setStatus(detailStatus, 'Systemtermine können nicht bearbeitet werden.', true);
+                return;
+            }
             formMode = { type: 'single', action: 'edit', baseEvent: currentEventData };
             fillEventForm(currentEventData);
             formSubtitle.textContent = 'Nur dieses Vorkommen anpassen.';
