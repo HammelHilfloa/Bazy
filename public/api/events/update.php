@@ -40,6 +40,10 @@ try {
         Response::jsonError('Event nicht gefunden.', 404);
     }
 
+    if (($existing['source'] ?? 'manual') !== 'manual') {
+        Response::jsonError('Systemtermine können nicht bearbeitet werden.', 403);
+    }
+
     $before = events_audit_payload($existing);
 
     $categoryId = isset($payload['category_id']) ? (int) $payload['category_id'] : (int) $existing['category_id'];

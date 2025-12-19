@@ -39,6 +39,10 @@ try {
         Response::jsonError('Event nicht gefunden.', 404);
     }
 
+    if (($existing['source'] ?? 'manual') !== 'manual') {
+        Response::jsonError('Systemtermine können nicht bearbeitet werden.', 403);
+    }
+
     $before = events_audit_payload($existing);
 
     $update = $pdo->prepare('UPDATE events SET is_deleted = 1, updated_by = :updated_by WHERE id = :id');
