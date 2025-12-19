@@ -233,6 +233,9 @@ try {
             $formatted = events_format_row($occ);
             $formatted['series_id'] = (int) $seriesRow['id'];
             $formatted['occurrence_start'] = $occ['occurrence_start'];
+            $formatted['series_rrule'] = $seriesRow['rrule'];
+            $formatted['series_timezone'] = $seriesRow['series_timezone'];
+            $formatted['skip_if_holiday'] = (int) $seriesRow['skip_if_holiday'];
             if (isset($occ['override_type'])) {
                 $formatted['override_type'] = $occ['override_type'];
             }
