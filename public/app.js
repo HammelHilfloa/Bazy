@@ -41,7 +41,7 @@ async function ensureHolidays(year) {
   state.error = null;
   updateStatus();
   try {
-    const res = await fetch(`/api/holidays.php?year=${year}`);
+    const res = await fetch(`./api/holidays.php?year=${year}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (data.error) throw new Error(data.error);
@@ -69,7 +69,7 @@ async function loadGroups() {
   state.groupsError = null;
   updateGroupStatus();
   try {
-    const res = await fetch('/api/groups.php');
+    const res = await fetch('./api/groups.php');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (data.error) throw new Error(data.error);
@@ -121,7 +121,7 @@ async function ensureEvents(monthStart, monthEnd) {
       start: `${toISO(monthStart)} 00:00:00`,
       end: `${toISO(monthEnd)} 23:59:59`,
     });
-    const res = await fetch(`/api/events.php?${params.toString()}`);
+    const res = await fetch(`./api/events.php?${params.toString()}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (data.error) throw new Error(data.error);
@@ -458,7 +458,7 @@ async function handleEventSubmit(e) {
   state.savingEvent = true;
   updateEventStatus('Speichere Termin …');
   try {
-    const res = await fetch('/api/events.php', {
+    const res = await fetch('./api/events.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -495,7 +495,7 @@ async function handleEventListClick(e) {
   btn.disabled = true;
   updateEventStatus('Lösche Termin …');
   try {
-    const res = await fetch(`/api/events.php?id=${id}`, { method: 'DELETE' });
+    const res = await fetch(`./api/events.php?id=${id}`, { method: 'DELETE' });
     const data = await res.json();
     if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
     clearEventCacheForCurrentMonth();
