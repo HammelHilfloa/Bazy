@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../lib/Response.php';
 require_once __DIR__ . '/../../lib/Auth.php';
 require_once __DIR__ . '/../../lib/Csrf.php';
 require_once __DIR__ . '/../../lib/AuditLog.php';
+require_once __DIR__ . '/../../lib/Logger.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     Response::jsonError('Methode nicht erlaubt.', 405);
@@ -45,7 +46,9 @@ try {
         ],
     ]);
 } catch (AuthException $e) {
+    Logger::warning('Login fehlgeschlagen', ['username' => $username, 'status' => $e->getStatus()]);
     Response::jsonError($e->getMessage(), $e->getStatus());
-} catch (Exception) {
+} catch (Exception $e) {
+    Logger::error('Login Fehler', ['message' => $e->getMessage()]);
     Response::jsonError('Login fehlgeschlagen.', 500);
 }

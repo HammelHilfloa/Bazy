@@ -12,10 +12,26 @@ Ein schlankes PHP/MySQL-Projekt ohne Framework oder Composer. Ziel ist ein Login
 - `public/assets/`: Statische Dateien.
 - `public/logs/`: Schreibbares Log-Verzeichnis (per `.htaccess` geschützt).
 
-## Konfiguration
-1. Kopiere `public/config/config.example.php` nach `public/config/config.php` und passe Zugangsdaten, `base_url`, Zeitzone und optional `cron_token` an.
-2. Stelle sicher, dass `public/logs/` für den Webserver beschreibbar ist.
-3. Datenbankverbindung nutzt PDO mit `utf8mb4`.
+## Setup
+1. Datenbank anlegen (z. B. `CREATE DATABASE vereinskalender CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`).
+2. `public/config/config.example.php` nach `public/config/config.php` kopieren und DB-Zugangsdaten, `base_url`, Zeitzone sowie optional `cron_token` (für Token-geschützte Cron-Calls) pflegen.
+3. Migration ausführen: `php public/database/migrate.php` (CLI) oder im Browser aufrufen.
+4. Seeds einspielen (optionales Demo-Set): `mysql -u <user> -p <db> < public/database/seed.sql`.
+5. Schreibrechte auf `public/logs/` sicherstellen (z. B. `chown www-data:www-data public/logs && chmod 775 public/logs`).
+6. Falls benötigt, App-URL für Login/Logout/Form-Actions in `config.php` per `base_url` korrekt setzen.
 
 ## Timezone
 Die globale Zeitzone wird beim Laden von `public/lib/bootstrap.php` aus der Konfiguration gesetzt (Fallback: `Europe/Berlin`).
+
+## Hosting-Hinweise (z. B. Netcup)
+- PHP >= 8.1 verwenden (PDO MySQL, cURL, JSON aktiviert).
+- Webserver-Benutzer braucht Schreibrechte auf `public/logs/` (für `app.log` und Cache).
+- Falls `cron_token` genutzt wird, Token nur serverseitig verteilen (z. B. per Cron/Monitoring), nicht clientseitig.
+
+## Backup-Empfehlung
+Regelmäßige Dumps per mysqldump, z. B.: `mysqldump -u <user> -p <db> > vereinskalender_$(date +%F).sql`.
+
+## Cron-Alternative (OpenHolidays Sync)
+- Optionaler Token-Call ohne Session: `https://<host>/api/sync/openholidays.php?cron_token=<TOKEN>&year_from=2024&year_to=2025`.
+- Aktivieren durch Setzen von `cron_token` in `config.php`.
+- Server prüft nur den Token; Audit-Log vermerkt den Trigger (`cron` vs. Session).

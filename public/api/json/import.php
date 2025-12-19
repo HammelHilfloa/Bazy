@@ -8,6 +8,7 @@ require_once __DIR__ . '/../../lib/Csrf.php';
 require_once __DIR__ . '/../../lib/Util.php';
 require_once __DIR__ . '/../../lib/AuditLog.php';
 require_once __DIR__ . '/../../lib/Series.php';
+require_once __DIR__ . '/../../lib/Logger.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     Response::jsonError('Methode nicht erlaubt.', 405);
@@ -376,5 +377,6 @@ try {
     if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
+    Logger::error('JSON Import fehlgeschlagen', ['error' => $e->getMessage()]);
     Response::jsonError('Import fehlgeschlagen.', 500, ['error' => $e->getMessage()]);
 }
