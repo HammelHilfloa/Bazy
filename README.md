@@ -45,3 +45,4 @@ Verhalten:
 
 - Externe Requests nutzen cURL (Fallback auf `file_get_contents`) mit Timeout 15s.
 - Kein Build-Tool / Node erforderlich – nur PHP + Vanilla JS.
+- Wenn keine MySQL/MariaDB-Verbindung möglich ist **und keine explizite DSN gesetzt wurde**, fällt das Backend automatisch auf eine lokale SQLite-Datei `bazy.sqlite` zurück (Tabellen + Beispiel-Gruppen werden beim ersten Start angelegt).
