@@ -104,7 +104,11 @@ class Auth
     {
         $user = self::requireLogin();
 
-        $roles = (array) $roles;
+        $roles = array_values(array_filter((array) $roles, static fn ($role): bool => is_string($role) && $role !== ''));
+        if (empty($roles)) {
+            Response::jsonError('Keine Berechtigung.', 403);
+        }
+
         if ($user['role'] === 'admin') {
             return $user;
         }

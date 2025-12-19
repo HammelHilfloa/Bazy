@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../lib/Response.php';
 require_once __DIR__ . '/../../lib/Auth.php';
 require_once __DIR__ . '/../../lib/Csrf.php';
 require_once __DIR__ . '/../../lib/AuditLog.php';
+require_once __DIR__ . '/../../lib/Logger.php';
 require_once __DIR__ . '/_functions.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
@@ -56,6 +57,7 @@ try {
     AuditLog::record($pdo, 'event', (string) $id, 'delete', $currentUser['id'], $before, $after);
 
     Response::jsonSuccess(['message' => 'Event gelöscht.', 'id' => $id]);
-} catch (Exception) {
+} catch (Exception $e) {
+    Logger::error('Event konnte nicht gelöscht werden', ['id' => $id, 'error' => $e->getMessage()]);
     Response::jsonError('Event konnte nicht gelöscht werden.', 500);
 }

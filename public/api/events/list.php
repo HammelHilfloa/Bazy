@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../lib/Response.php';
 require_once __DIR__ . '/../../lib/Auth.php';
 require_once __DIR__ . '/../../lib/Util.php';
 require_once __DIR__ . '/../../lib/Series.php';
+require_once __DIR__ . '/../../lib/Logger.php';
 require_once __DIR__ . '/_functions.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
@@ -30,6 +31,36 @@ if (!$fromDate || !$toDate) {
 
 if ($fromDate > $toDate) {
     Response::jsonError('"from" darf nicht nach "to" liegen.', 422);
+}
+
+$maxRangeDays = 366;
+$rangeDays = (int) $fromDate->diff($toDate)->format('%a');
+if ($rangeDays > $maxRangeDays) {
+    Response::jsonError('Zeitraum ist zu groß (max. 366 Tage).', 422);
+}
+
+$cacheEnabled = isset($_GET['cache']) ? (int) $_GET['cache'] === 1 : false;
+$cacheKey = null;
+$cacheFile = null;
+if ($cacheEnabled) {
+    $cacheKey = hash('sha256', implode('|', [
+        $fromInput,
+        $toInput,
+        $_GET['category_ids'] ?? '',
+        $_GET['q'] ?? '',
+        $_GET['include_system'] ?? '',
+    ]));
+    $cacheFile = __DIR__ . '/../../logs/cache_events_' . $cacheKey . '.json';
+
+    if ($cacheFile && file_exists($cacheFile)) {
+        $age = time() - filemtime($cacheFile);
+        if ($age <= 60) {
+            $cached = json_decode((string) file_get_contents($cacheFile), true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($cached)) {
+                Response::jsonSuccess($cached);
+            }
+        }
+    }
 }
 
 /**
@@ -58,7 +89,7 @@ if ($categoryIdsRaw !== '') {
 }
 
 $search = trim($_GET['q'] ?? '');
-$includeSystem = isset($_GET['include_system']) ? (int) $_GET['include_system'] : 0;
+$includeSystem = (isset($_GET['include_system']) && (int) $_GET['include_system'] === 1) ? 1 : 0;
 
 $params = [
     'from' => $fromDate->format('Y-m-d H:i:s'),
@@ -253,7 +284,17 @@ try {
         return ($a['id'] ?? 0) <=> ($b['id'] ?? 0);
     });
 
-    Response::jsonSuccess(['events' => $allEvents]);
-} catch (Exception) {
+    $payload = ['events' => $allEvents];
+
+    if ($cacheEnabled && $cacheFile) {
+        if (!is_dir(dirname($cacheFile))) {
+            mkdir(dirname($cacheFile), 0775, true);
+        }
+        file_put_contents($cacheFile, json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    }
+
+    Response::jsonSuccess($payload);
+} catch (Exception $e) {
+    Logger::error('Events konnten nicht geladen werden', ['error' => $e->getMessage()]);
     Response::jsonError('Events konnten nicht geladen werden.', 500);
 }

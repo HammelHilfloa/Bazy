@@ -7,6 +7,7 @@ require_once __DIR__ . '/../../lib/Auth.php';
 require_once __DIR__ . '/../../lib/Csrf.php';
 require_once __DIR__ . '/../../lib/Util.php';
 require_once __DIR__ . '/../../lib/AuditLog.php';
+require_once __DIR__ . '/../../lib/Logger.php';
 require_once __DIR__ . '/_functions.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
@@ -156,6 +157,7 @@ try {
     AuditLog::record($pdo, 'event', (string) $id, 'update', $currentUser['id'], $before, $after);
 
     Response::jsonSuccess(['event' => $updated ? events_format_row($updated) : ['id' => $id]]);
-} catch (Exception) {
+} catch (Exception $e) {
+    Logger::error('Event konnte nicht aktualisiert werden', ['id' => $id, 'error' => $e->getMessage()]);
     Response::jsonError('Event konnte nicht aktualisiert werden.', 500);
 }

@@ -8,15 +8,26 @@ require_once __DIR__ . '/../../lib/Csrf.php';
 require_once __DIR__ . '/../../lib/Util.php';
 require_once __DIR__ . '/../../lib/AuditLog.php';
 require_once __DIR__ . '/../../lib/OpenHolidaysClient.php';
+require_once __DIR__ . '/../../lib/Logger.php';
 
-if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+$cronToken = (string) ($config['cron_token'] ?? '');
+$requestToken = (string) ($_GET['cron_token'] ?? ($_POST['cron_token'] ?? ''));
+$cronAllowed = $cronToken !== '' && $requestToken !== '' && hash_equals($cronToken, $requestToken);
+
+if ($method !== 'POST' && !$cronAllowed) {
     Response::jsonError('Methode nicht erlaubt.', 405);
 }
 
-Csrf::validatePostRequest();
-$currentUser = Auth::requireRole('admin');
+if ($method === 'POST') {
+    Csrf::validatePostRequest();
+}
 
-$payload = sync_load_payload();
+$currentUser = $cronAllowed
+    ? ['id' => null, 'username' => 'cron', 'role' => 'system']
+    : Auth::requireRole('admin');
+
+$payload = sync_load_payload($method);
 
 $nowYear = (int) date('Y');
 $yearFrom = isset($payload['year_from']) ? (int) $payload['year_from'] : $nowYear;
@@ -164,6 +175,7 @@ try {
             'year_from' => $yearFrom,
             'year_to' => $yearTo,
             'report' => $report,
+            'trigger' => $cronAllowed ? 'cron' : 'session',
         ]
     );
 
@@ -173,16 +185,21 @@ try {
         $pdo->rollBack();
     }
     $report['errors'][] = $e->getMessage();
+    Logger::error('OpenHolidays Sync fehlgeschlagen', ['error' => $e->getMessage()]);
     Response::jsonError('Sync fehlgeschlagen.', 500, ['report' => $report]);
 }
 
 /**
  * @return array<string,mixed>
  */
-function sync_load_payload(): array
+function sync_load_payload(string $method): array
 {
-    if (!empty($_POST)) {
+    if ($method === 'POST' && !empty($_POST)) {
         return $_POST;
+    }
+
+    if ($method === 'GET' && !empty($_GET)) {
+        return $_GET;
     }
 
     $raw = file_get_contents('php://input');

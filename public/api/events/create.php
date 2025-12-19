@@ -7,6 +7,7 @@ require_once __DIR__ . '/../../lib/Auth.php';
 require_once __DIR__ . '/../../lib/Csrf.php';
 require_once __DIR__ . '/../../lib/Util.php';
 require_once __DIR__ . '/../../lib/AuditLog.php';
+require_once __DIR__ . '/../../lib/Logger.php';
 require_once __DIR__ . '/_functions.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
@@ -113,6 +114,7 @@ try {
     AuditLog::record($pdo, 'event', (string) $id, 'create', $currentUser['id'], null, $after);
 
     Response::jsonSuccess(['event' => $row ? events_format_row($row) : ['id' => $id]], 201);
-} catch (Exception) {
+} catch (Exception $e) {
+    Logger::error('Event konnte nicht erstellt werden', ['error' => $e->getMessage()]);
     Response::jsonError('Event konnte nicht erstellt werden.', 500);
 }
