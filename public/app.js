@@ -4,14 +4,27 @@ const state = {
   holidaysByYear: {},
   loading: false,
   error: null,
+  groups: [],
+  groupsError: null,
+  eventsByMonth: {},
+  eventsLoading: false,
+  eventsError: null,
+  savingEvent: false,
 };
-
-const dowLabels = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('prevBtn').addEventListener('click', () => moveMonth(-1));
   document.getElementById('nextBtn').addEventListener('click', () => moveMonth(1));
-  document.getElementById('todayBtn').addEventListener('click', () => { state.current = new Date(); render(); });
+  document.getElementById('todayBtn').addEventListener('click', () => {
+    state.current = new Date();
+    render();
+  });
+
+  document.getElementById('eventForm').addEventListener('submit', handleEventSubmit);
+  document.getElementById('monthEvents').addEventListener('click', handleEventListClick);
+
+  initEventDefaults();
+  loadGroups();
   render();
 });
 
@@ -51,6 +64,86 @@ function normalizeHoliday(entry) {
   };
 }
 
+async function loadGroups() {
+  if (state.groups.length) return state.groups;
+  state.groupsError = null;
+  updateGroupStatus();
+  try {
+    const res = await fetch('/api/groups.php');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    state.groups = data;
+    renderGroups();
+    populateGroupSelect();
+  } catch (err) {
+    console.error(err);
+    state.groupsError = 'Gruppen konnten nicht geladen werden.';
+    updateGroupStatus();
+  }
+  return state.groups;
+}
+
+function renderGroups() {
+  const list = document.getElementById('groupsList');
+  list.innerHTML = '';
+  if (!state.groups.length) {
+    list.textContent = 'Keine Gruppen gefunden.';
+    return;
+  }
+  state.groups.forEach((g) => {
+    const pill = document.createElement('span');
+    pill.className = 'pill';
+    pill.textContent = g.name;
+    list.appendChild(pill);
+  });
+}
+
+function populateGroupSelect() {
+  const select = document.getElementById('groupSelect');
+  select.innerHTML = '';
+  state.groups.forEach((g) => {
+    const opt = document.createElement('option');
+    opt.value = g.id;
+    opt.textContent = g.name;
+    select.appendChild(opt);
+  });
+}
+
+async function ensureEvents(monthStart, monthEnd) {
+  const cacheKey = `${monthStart.getUTCFullYear()}-${monthStart.getUTCMonth()}`;
+  if (state.eventsByMonth[cacheKey]) return state.eventsByMonth[cacheKey];
+  state.eventsLoading = true;
+  state.eventsError = null;
+  updateEventStatus();
+  try {
+    const params = new URLSearchParams({
+      start: `${toISO(monthStart)} 00:00:00`,
+      end: `${toISO(monthEnd)} 23:59:59`,
+    });
+    const res = await fetch(`/api/events.php?${params.toString()}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    state.eventsByMonth[cacheKey] = data.map(normalizeEvent);
+  } catch (err) {
+    console.error(err);
+    state.eventsError = 'Termine konnten nicht geladen werden.';
+  } finally {
+    state.eventsLoading = false;
+    updateEventStatus();
+  }
+  return state.eventsByMonth[cacheKey] || [];
+}
+
+function normalizeEvent(entry) {
+  return {
+    ...entry,
+    startDate: parseIsoDate(entry.start_at.split(' ')[0]),
+    endDate: parseIsoDate(entry.end_at.split(' ')[0]),
+  };
+}
+
 function updateStatus() {
   const el = document.getElementById('status');
   if (state.loading) {
@@ -58,6 +151,36 @@ function updateStatus() {
     el.classList.remove('error');
   } else if (state.error) {
     el.textContent = state.error;
+    el.classList.add('error');
+  } else {
+    el.textContent = '';
+    el.classList.remove('error');
+  }
+}
+
+function updateGroupStatus() {
+  const el = document.getElementById('groupsStatus');
+  if (state.groupsError) {
+    el.textContent = state.groupsError;
+    el.classList.add('error');
+  } else {
+    el.textContent = '';
+    el.classList.remove('error');
+  }
+}
+
+function updateEventStatus(message) {
+  const el = document.getElementById('eventStatus');
+  if (message) {
+    el.textContent = message;
+    el.classList.remove('error');
+    return;
+  }
+  if (state.eventsLoading) {
+    el.textContent = 'Lade Termine …';
+    el.classList.remove('error');
+  } else if (state.eventsError) {
+    el.textContent = state.eventsError;
     el.classList.add('error');
   } else {
     el.textContent = '';
@@ -75,8 +198,13 @@ async function render() {
   const weeks = buildWeeks(monthStart);
   weeksEl.innerHTML = '';
 
-  const holidays = await ensureHolidays(monthStart.getUTCFullYear());
+  await loadGroups();
+  const [holidays, events] = await Promise.all([
+    ensureHolidays(monthStart.getUTCFullYear()),
+    ensureEvents(monthStart, monthEnd),
+  ]);
   const monthHolidays = holidays.filter((h) => rangesOverlap(h.start, h.end, monthStart, monthEnd));
+  const monthEvents = events.slice().sort((a, b) => new Date(a.start_at) - new Date(b.start_at));
 
   weeks.forEach((week) => {
     const row = document.createElement('div');
@@ -105,8 +233,27 @@ async function render() {
         }
       });
 
+      const dayEvents = monthEvents.filter((ev) => eventSpansDay(ev, day));
+      const eventWrap = document.createElement('div');
+      eventWrap.className = 'day-events';
+      dayEvents.forEach((ev) => {
+        const row = document.createElement('div');
+        row.className = 'day-event-row';
+        const dot = document.createElement('span');
+        dot.className = 'event-dot';
+        const time = document.createElement('span');
+        time.textContent = formatTime(ev.start_at);
+        const title = document.createElement('span');
+        title.textContent = `${ev.group_name}: ${ev.title}`;
+        row.appendChild(dot);
+        row.appendChild(time);
+        row.appendChild(title);
+        eventWrap.appendChild(row);
+      });
+
       cell.appendChild(header);
       cell.appendChild(badgesWrap);
+      cell.appendChild(eventWrap);
       row.appendChild(cell);
     });
 
@@ -125,6 +272,8 @@ async function render() {
     row.appendChild(barLayer);
     weeksEl.appendChild(row);
   });
+
+  renderMonthEventsList(monthEvents, monthStart);
 }
 
 function buildWeeks(monthStart) {
@@ -218,4 +367,150 @@ function minDate(list) {
 
 function toISO(date) {
   return date.toISOString().slice(0, 10);
+}
+
+function formatTime(iso) {
+  const time = iso.split(' ')[1] || '';
+  return time.slice(0, 5);
+}
+
+function renderMonthEventsList(events, monthStart) {
+  const list = document.getElementById('monthEvents');
+  list.innerHTML = '';
+  if (!events.length) {
+    list.textContent = 'Keine Termine in diesem Monat.';
+    return;
+  }
+  events.forEach((ev) => {
+    const item = document.createElement('div');
+    item.className = 'event-item';
+    const header = document.createElement('header');
+    const title = document.createElement('div');
+    title.textContent = ev.title;
+    const actions = document.createElement('div');
+    actions.className = 'event-actions';
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn small';
+    delBtn.textContent = 'Löschen';
+    delBtn.dataset.eventId = ev.id;
+    actions.appendChild(delBtn);
+    header.appendChild(title);
+    header.appendChild(actions);
+
+    const meta = document.createElement('div');
+    meta.className = 'event-meta';
+    const tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.textContent = ev.group_name;
+    const dateText = document.createElement('span');
+    dateText.textContent = `${formatDateTime(ev.start_at)} – ${formatDateTime(ev.end_at)}`;
+    meta.appendChild(tag);
+    meta.appendChild(dateText);
+
+    item.appendChild(header);
+    item.appendChild(meta);
+
+    if (ev.location) {
+      const loc = document.createElement('div');
+      loc.className = 'event-meta';
+      loc.textContent = ev.location;
+      item.appendChild(loc);
+    }
+
+    if (ev.notes) {
+      const notes = document.createElement('div');
+      notes.className = 'event-notes';
+      notes.textContent = ev.notes;
+      item.appendChild(notes);
+    }
+
+    list.appendChild(item);
+  });
+}
+
+function formatDateTime(iso) {
+  const date = iso.split(' ')[0];
+  const time = formatTime(iso);
+  return `${date} ${time}`;
+}
+
+function initEventDefaults() {
+  const start = document.querySelector('input[name="start_at"]');
+  const end = document.querySelector('input[name="end_at"]');
+  const now = new Date();
+  const inOneHour = new Date(now.getTime() + 60 * 60 * 1000);
+  start.value = toLocalInput(now);
+  end.value = toLocalInput(inOneHour);
+}
+
+function toLocalInput(date) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+async function handleEventSubmit(e) {
+  e.preventDefault();
+  const form = e.target;
+  const payload = Object.fromEntries(new FormData(form).entries());
+  payload.group_id = Number(payload.group_id);
+  payload.start_at = payload.start_at.replace('T', ' ');
+  payload.end_at = payload.end_at.replace('T', ' ');
+  state.savingEvent = true;
+  updateEventStatus('Speichere Termin …');
+  try {
+    const res = await fetch('/api/events.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      const msg = data.error || `HTTP ${res.status}`;
+      throw new Error(msg);
+    }
+    clearEventCacheForCurrentMonth();
+    form.reset();
+    initEventDefaults();
+    updateEventStatus('Termin gespeichert.');
+    render();
+  } catch (err) {
+    console.error(err);
+    updateEventStatus('Termin konnte nicht gespeichert werden.');
+  } finally {
+    state.savingEvent = false;
+  }
+}
+
+function clearEventCacheForCurrentMonth() {
+  const monthStart = new Date(Date.UTC(state.current.getFullYear(), state.current.getMonth(), 1));
+  const cacheKey = `${monthStart.getUTCFullYear()}-${monthStart.getUTCMonth()}`;
+  delete state.eventsByMonth[cacheKey];
+}
+
+async function handleEventListClick(e) {
+  const btn = e.target.closest('button[data-event-id]');
+  if (!btn) return;
+  const id = Number(btn.dataset.eventId);
+  if (!id) return;
+  btn.disabled = true;
+  updateEventStatus('Lösche Termin …');
+  try {
+    const res = await fetch(`/api/events.php?id=${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+    clearEventCacheForCurrentMonth();
+    render();
+    updateEventStatus('Termin gelöscht.');
+  } catch (err) {
+    console.error(err);
+    updateEventStatus('Termin konnte nicht gelöscht werden.');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function eventSpansDay(event, dayDate) {
+  const start = parseIsoDate(toISO(dayDate));
+  const end = parseIsoDate(toISO(dayDate));
+  return event.startDate <= end && event.endDate >= start;
 }
