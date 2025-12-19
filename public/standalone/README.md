@@ -27,6 +27,12 @@ Danach im Browser `http://localhost:8000/standalone/` öffnen.
 
 Die API (`standalone/api/calendar.php`) liefert die JSON-Struktur komplett aus und nimmt neue/aktualisierte Events per `POST` entgegen. Löschen erfolgt via `DELETE ?id=…`.
 
+## Import
+
+Über die Standalone-Oberfläche können zusätzliche Termine aus einer JSON-Datei importiert werden. Akzeptiert wird entweder eine komplette Kalender-Struktur (mit `events`, optional `groups`, `year`, `source`) oder ein simples Array von Events.
+
+Eine startfertige Vorlage liegt unter `public/standalone/data/import-template.json` und kann direkt heruntergeladen werden.
+
 ## Ansichten
 
 - **Monatsmatrix:** Spalten = Tage, Zeilen = Gruppen

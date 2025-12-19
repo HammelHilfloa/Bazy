@@ -26,6 +26,8 @@
           <button class="pill" data-view="year" role="tab" aria-selected="false">Jahresübersicht</button>
         </div>
         <div class="actions">
+          <button class="ghost" id="importJsonBtn">JSON importieren</button>
+          <a class="ghost button-link" href="./data/import-template.json" download>Basis-JSON</a>
           <div class="month-switch" aria-label="Monat wechseln">
             <button class="ghost" id="prevBtn" aria-label="Vorheriger Zeitraum">◀</button>
             <div id="monthLabel" class="label">–</div>
@@ -91,6 +93,8 @@
       </form>
     </div>
   </div>
+
+  <input type="file" id="importFile" accept="application/json" hidden aria-label="JSON Datei auswählen">
 
   <script src="./standalone.js"></script>
 </body>

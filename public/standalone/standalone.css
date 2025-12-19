@@ -146,6 +146,11 @@ button:disabled {
   border: 1px solid var(--border);
 }
 
+.button-link {
+  text-decoration: none;
+  display: inline-block;
+}
+
 .status {
   margin: 0 0 12px;
   padding: 10px 14px;
