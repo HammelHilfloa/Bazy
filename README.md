@@ -5,7 +5,7 @@ Vanilla-JS Monatskalender mit PHP-Backend. Lädt automatisch Feiertage und Schul
 ## Setup
 
 1. **PHP & MySQL bereitstellen** (Shared Hosting kompatibel, PHP 8.x):
-   - Konfiguriere Umgebungsvariablen `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS` (z. B. in Plesk/Apache vhost).
+   - Lege eine `.env` im Projektwurzelverzeichnis an (siehe `.env.example`) oder setze Umgebungsvariablen `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS` (optional `DATABASE_URL` / `DB_DSN`).
 2. **Datenbank anlegen**:
    - Schema importieren: `mysql -uUSER -p DB_NAME < sql/schema.sql`
 3. **Deployment**:
