@@ -46,9 +46,16 @@ try {
 
     echo json_encode($entries);
 } catch (Throwable $e) {
-    http_response_code(500);
     error_log('Holiday fetch error: ' . $e->getMessage());
-    echo json_encode(['error' => 'Fehler beim Laden der Feiertage/Ferien']);
+    try {
+        $fallback = fetchFromDb($pdo, $year, $region);
+    } catch (Throwable $inner) {
+        error_log('Holiday fallback fetch failed: ' . $inner->getMessage());
+        $fallback = [];
+    }
+    // Best effort: return cached/empty data instead of surfacing an error to the UI
+    http_response_code(200);
+    echo json_encode($fallback);
 }
 
 function refreshHolidays(PDO $pdo, int $year, string $region): array
@@ -83,17 +90,32 @@ function refreshHolidays(PDO $pdo, int $year, string $region): array
             $stmt->execute($params);
         }
 
-        $insert = $pdo->prepare(
-            'INSERT INTO holiday_entries (source, kind, name, start_date, end_date, region, year, checksum, fetched_at, created_at, updated_at)
-            VALUES (:source, :kind, :name, :start_date, :end_date, :region, :year, :checksum, NOW(), NOW(), NOW())
-            ON DUPLICATE KEY UPDATE
-                source = VALUES(source),
-                kind = VALUES(kind),
-                name = VALUES(name),
-                start_date = VALUES(start_date),
-                end_date = VALUES(end_date),
-                updated_at = NOW()'
-        );
+        $isSqlite = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite';
+        $insertSql = $isSqlite
+            ? 'INSERT INTO holiday_entries (source, kind, name, start_date, end_date, region, year, checksum, fetched_at, created_at, updated_at)
+                VALUES (:source, :kind, :name, :start_date, :end_date, :region, :year, :checksum, :fetched_at, :created_at, :updated_at)
+                ON CONFLICT(region, year, kind, name, start_date, end_date) DO UPDATE SET
+                    source = excluded.source,
+                    kind = excluded.kind,
+                    name = excluded.name,
+                    start_date = excluded.start_date,
+                    end_date = excluded.end_date,
+                    checksum = excluded.checksum,
+                    fetched_at = excluded.fetched_at,
+                    updated_at = excluded.updated_at'
+            : 'INSERT INTO holiday_entries (source, kind, name, start_date, end_date, region, year, checksum, fetched_at, created_at, updated_at)
+                VALUES (:source, :kind, :name, :start_date, :end_date, :region, :year, :checksum, :fetched_at, :created_at, :updated_at)
+                ON DUPLICATE KEY UPDATE
+                    source = VALUES(source),
+                    kind = VALUES(kind),
+                    name = VALUES(name),
+                    start_date = VALUES(start_date),
+                    end_date = VALUES(end_date),
+                    checksum = VALUES(checksum),
+                    fetched_at = VALUES(fetched_at),
+                    updated_at = VALUES(updated_at)';
+        $insert = $pdo->prepare($insertSql);
+        $now = (new DateTimeImmutable())->format('Y-m-d H:i:s');
 
         foreach ($entries as $entry) {
             $checksum = sha1($entry['name'] . '|' . $entry['start'] . '|' . $entry['end'] . '|' . $entry['kind']);
@@ -106,6 +128,9 @@ function refreshHolidays(PDO $pdo, int $year, string $region): array
                 ':region' => $region,
                 ':year' => $year,
                 ':checksum' => $checksum,
+                ':fetched_at' => $now,
+                ':created_at' => $now,
+                ':updated_at' => $now,
             ]);
         }
 

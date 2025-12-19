@@ -100,8 +100,9 @@ function handleCreate(PDO $pdo): void
 
         $insert = $pdo->prepare(
             'INSERT INTO events (group_id, title, start_at, end_at, location, notes, created_at, updated_at)
-             VALUES (:group_id, :title, :start_at, :end_at, :location, :notes, NOW(), NOW())'
+             VALUES (:group_id, :title, :start_at, :end_at, :location, :notes, :created_at, :updated_at)'
         );
+        $now = (new DateTimeImmutable())->format('Y-m-d H:i:s');
         $insert->execute([
             ':group_id' => $groupId,
             ':title' => $title,
@@ -109,6 +110,8 @@ function handleCreate(PDO $pdo): void
             ':end_at' => $endAt,
             ':location' => $location,
             ':notes' => $notes,
+            ':created_at' => $now,
+            ':updated_at' => $now,
         ]);
 
         echo json_encode(['id' => (int) $pdo->lastInsertId()]);
