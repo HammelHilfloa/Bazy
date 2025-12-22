@@ -20,6 +20,13 @@ Ein schlankes PHP/MySQL-Projekt ohne Framework oder Composer. Ziel ist ein Login
 5. Schreibrechte auf `public/logs/` sicherstellen (z. B. `chown www-data:www-data public/logs && chmod 775 public/logs`).
 6. Falls benötigt, App-URL für Login/Logout/Form-Actions in `config.php` per `base_url` korrekt setzen.
 
+## Browser-Installation
+1. Sicherstellen, dass `public/config/config.php` noch nicht existiert (oder temporär `INSTALLER_FORCE=true` in der Datei setzen).
+2. Schreibrechte für `public/config/` und `public/logs/` setzen.
+3. Im Browser `https://<host>/installer.php` öffnen und DB-Daten sowie Admin-Zugang ausfüllen (optional Editor-User hinzufügen).
+4. Mit „Test DB Verbindung“ prüfen und anschließend „Installieren“ ausführen. Der Installer spielt `database/schema.sql` ein, legt Kategorien, Admin (und optional Editor) an, schreibt einen Audit-Log-Eintrag (`entity_type=import`, `action=create`) und generiert `config/config.php` (mit autodetect `base_url`, Zeitzone `Europe/Berlin`, optional zufälligem `cron_token`).
+5. Nach Erfolg „Installer löschen“ klicken oder `public/installer.php` manuell entfernen. Der Installer blockiert automatisch, sobald `config.php` existiert.
+
 ## Timezone
 Die globale Zeitzone wird beim Laden von `public/lib/bootstrap.php` aus der Konfiguration gesetzt (Fallback: `Europe/Berlin`).
 
