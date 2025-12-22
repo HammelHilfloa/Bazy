@@ -1,4 +1,8 @@
 <?php
+if (!defined('INSTALLER_FORCE')) {
+    define('INSTALLER_FORCE', false);
+}
+
 return [
     'db' => [
         'host' => 'localhost',
