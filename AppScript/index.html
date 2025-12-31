@@ -86,13 +86,14 @@
       }
       
       /* Buttons - Mobile optimiert */
-      .btn { padding: 10px 14px; font-size: 14px; border-radius: 8px; cursor: pointer; border: none; min-height: 44px; color: #0f172a; }
-      .btn.small { padding: 8px 10px; font-size: 13px; }
+      .btn { padding: 9px 12px; font-size: 13px; border-radius: 10px; cursor: pointer; border: none; min-height: 38px; line-height: 1.2; color: #0f172a; }
+      .btn.small { padding: 7px 9px; font-size: 12px; min-height: 0; line-height: 1.1; }
       
       @media (max-width: 768px) {
-        .btn { padding: 10px 12px; font-size: 13px; width: 100%; }
+        .btn { padding: 9px 12px; font-size: 13px; width: 100%; }
         .btn.small { width: auto; }
-        .itemActions .btn.small { width: auto; flex: 1; min-width: 80px; }
+        .itemActions .btn { flex: 1 1 48%; min-width: 0; }
+        .itemActions .btn.small { width: auto; flex: 0 1 46%; min-width: 90px; }
       }
       
       /* Modal - Mobile optimiert */
