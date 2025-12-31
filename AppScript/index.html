@@ -1,333 +1,1176 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <base target="_top">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, user-scalable=yes">
-  <?!= include('style'); ?>
-  <style>
-    .hidden{display:none !important}
-    .app{width:min(960px,100%);padding:14px 12px 28px}
-    @media (max-width:540px){
-      .app{padding:12px 10px 24px}
-    }
+  <head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <?!= include('style'); ?>
 
-    .topbar{flex-wrap:wrap;align-items:flex-start}
-    .brand{flex:1 1 auto;min-width:240px}
-    .userbox{flex-wrap:wrap;justify-content:flex-start}
-    .userbox .btn{width:auto}
+    <style>
+      /* Mobile Optimierung */
+      * { box-sizing: border-box; }
+      
+      /* Header - Dunkelgrün */
+      .topbar { background: linear-gradient(135deg, #1b5e20 0%, #2d7a3a 100%) !important; }
+      .topbar .brand { color: white; }
+      .topbar .title { color: white; }
+      .topbar .subtitle { color: rgba(255,255,255,0.85); }
+      .topbar .logo { background-color: rgba(255,255,255,0.2); color: white; }
+      
+      /* Responsive Layout */
+      body { margin: 0; padding: 0; }
+      .app { display: flex; flex-direction: column; min-height: 100vh; }
+      
+      .topbar { padding: 12px; }
+      .brand { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+      .logo { min-width: 44px; min-height: 44px; }
+      
+      .userbox { gap: 8px; flex-wrap: wrap; }
+      .user { padding: 8px; }
+      
+      /* Tabs - Mobile optimiert */
+      .tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .tab { padding: 10px 12px; font-size: 14px; white-space: nowrap; flex-shrink: 0; }
+      
+      @media (max-width: 768px) {
+        .tab { padding: 8px 10px; font-size: 13px; }
+        .tabs { padding: 6px; gap: 2px; }
+      }
+      
+      /* Cards - Mobile optimiert */
+      .card { padding: 12px; margin: 0; border-radius: 8px; }
+      
+      @media (max-width: 768px) {
+        .card { padding: 10px; margin: 0; }
+        .card h2 { font-size: 18px; margin: 0 0 10px 0; }
+        .card h3 { font-size: 16px; margin: 0 0 8px 0; }
+        .card p { font-size: 14px; }
+      }
+      
+      /* Grid - Mobile optimiert */
+      .grid { display: grid; gap: 10px; }
+      
+      @media (max-width: 768px) {
+        .grid { gap: 8px; }
+        .grid label { font-size: 13px; }
+        .grid input, .grid select { padding: 10px; font-size: 14px; }
+      }
+      
+      /* List Items - Mobile optimiert */
+      .item { padding: 12px; margin: 8px 0; border-radius: 8px; display: flex; flex-direction: column; gap: 10px; }
+      
+      @media (max-width: 768px) {
+        .item { padding: 10px; margin: 6px 0; flex-direction: column; }
+        .itemTitle { font-size: 15px; }
+        .itemSub { font-size: 13px; }
+        .itemActions { display: flex; gap: 6px; flex-wrap: wrap; }
+      }
+      
+      /* Buttons - Mobile optimiert */
+      .btn { padding: 10px 14px; font-size: 14px; border-radius: 6px; cursor: pointer; border: none; }
+      .btn.small { padding: 8px 10px; font-size: 13px; }
+      
+      @media (max-width: 768px) {
+        .btn { padding: 10px 12px; font-size: 13px; width: 100%; }
+        .btn.small { width: auto; }
+        .itemActions .btn.small { width: auto; flex: 1; min-width: 80px; }
+      }
+      
+      /* Modal - Mobile optimiert */
+      .modal { position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:flex-end; justify-content:center; padding:14px; z-index:50;}
+      .sheet { width:min(720px, 100%); background:rgba(18,26,43,.98); border:1px solid rgba(147,164,199,.18); border-radius:16px; overflow:hidden; max-height: 90vh; overflow-y: auto; }
+      
+      @media (max-width: 768px) {
+        .sheet { width: 100%; border-radius: 12px 12px 0 0; }
+        .sheetHeader { padding: 12px; }
+        .sheetBody { padding: 12px; }
+      }
+      
+      .sheetHeader { display:flex; align-items:center; justify-content:space-between; padding:14px 14px 10px 14px; border-bottom:1px solid rgba(147,164,199,.14);}
+      .sheetTitle { font-weight:800; letter-spacing:.2px; }
+      .sheetSub { color:var(--muted); font-size:13px; margin-top:2px; }
+      .sheetBody { padding:14px; }
+      .kv { display:grid; grid-template-columns: 120px 1fr; gap:10px 12px; }
+      .kv .k { color:var(--muted); font-size:13px; }
+      .kv .v { font-weight:600; }
+      .user { cursor:pointer; }
+      .badge.info { border-color: rgba(59,130,246,.35); color: rgba(59,130,246,.95); background: rgba(59,130,246,.08); }
+      
+      /* FilterBar - Mobile optimiert */
+      .filterbar { display: flex; gap: 8px; flex-wrap: wrap; padding: 8px 0; }
+      
+      @media (max-width: 768px) {
+        .filterbar { flex-direction: column; gap: 6px; }
+        .filter { width: 100%; }
+        .filter select { width: 100%; }
+      }
+      
+      /* Row - Mobile optimiert */
+      .row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 8px 0; }
+      
+      @media (max-width: 768px) {
+        .row { flex-direction: column; align-items: stretch; }
+        .row button { width: 100%; }
+      }
 
-    .card{padding:12px}
+      /* Extra mobile tweaks for smaller phones */
+      @media (max-width: 480px) {
+        .topbar { padding: 8px; }
+        .brand { gap: 8px; align-items: center; }
+        .logo { min-width: 36px; min-height: 36px; font-size: 14px; padding: 6px; border-radius: 8px; }
+        .topbar .title { font-size: 16px; line-height: 1; }
+        .topbar .subtitle { display: none; }
+        .tabs { padding: 6px; gap: 4px; }
+        .tab { padding: 6px 8px; font-size: 13px; }
+      }
+    </style>
+  </head>
 
-    .grid.compact{grid-template-columns:1fr 1fr}
-    @media (max-width:540px){
-      .grid.compact{grid-template-columns:1fr}
-    }
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo">VH</div>
+          <div style="flex: 1;">
+            <div class="title">Vereinshelfer</div>
+            <div class="subtitle">Trainer Einteilung & Abrechnung</div>
+          </div>
+        </div>
 
-    .panel{margin-top:12px}
+        <div class="userbox" id="userbox" style="display:none; justify-content: flex-end; align-items: center;">
+          <div class="user" id="userName"></div>
+          <button class="btn ghost" id="btnLogout">Logout</button>
+        </div>
+      </header>
 
-    .item{flex-direction:column;align-items:stretch}
-    .itemMain{min-width:0}
-    .itemActions{width:100%;justify-content:flex-start}
-    @media (min-width:721px){
-      .item{flex-direction:row}
-      .itemActions{width:auto;justify-content:flex-end}
-    }
+      <!-- LOGIN -->
+      <section class="card" id="loginCard">
+        <h2>Login</h2>
+        <p class="muted">Trainer auswählen und PIN eingeben.</p>
 
-    .filters{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
-    .filters .field{flex:1 1 180px;min-width:0}
-    .filters .btn.small{width:100%}
-    @media (min-width:720px){
-      .filters .btn.small{width:auto}
-    }
+        <div class="grid">
+          <label>Trainer</label>
+          <select id="trainerSelect"></select>
 
-    .badge{font-size:11px;padding:5px 9px}
-    .badges{gap:6px}
-  </style>
-</head>
-<body>
-  <div class="app">
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo">VH</div>
-        <div>
-          <div class="title">Vereinshelfer · Trainer</div>
-          <div class="subtitle">Mobile Webapp für Trainings &amp; Einsätze</div>
+          <label>PIN</label>
+          <input id="pinInput" type="password" inputmode="numeric" placeholder="PIN" />
+
+          <div></div>
+          <button class="btn" id="btnLogin">Anmelden</button>
+        </div>
+
+        <div class="msg" id="loginMsg" style="display:none;"></div>
+      </section>
+
+      <!-- MAIN -->
+      <section class="card" id="mainCard" style="display:none;">
+        <div class="tabs">
+          <button class="tab active" data-tab="trainings">Trainings</button>
+          <button class="tab" data-tab="mine">Meine Einteilungen</button>
+          <button class="tab" data-tab="billing">Abrechnung</button>
+          <button class="tab" data-tab="admin" id="adminTabBtn" style="display:none;">Admin</button>
+        </div>
+
+        <!-- TRAININGS -->
+        <div class="panel" id="panel-trainings">
+          <div class="row">
+            <h3>Trainingsliste</h3>
+            <button class="btn ghost" id="btnRefresh">Aktualisieren</button>
+          </div>
+
+          <!-- FILTER BAR -->
+          <div class="filterbar">
+            <div class="filter">
+              <label>Monat</label>
+              <select id="filterMonth"></select>
+            </div>
+            <div class="filter">
+              <label>Gruppe</label>
+              <select id="filterGroup"></select>
+            </div>
+            <div class="filter">
+              <label>Nur kritisch</label>
+              <select id="filterCritical">
+                <option value="0">Nein</option>
+                <option value="1">Ja (kein Trainer)</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="trainingsList" class="list"></div>
+        </div>
+
+        <!-- MINE -->
+        <div class="panel" id="panel-mine" style="display:none;">
+          <div class="row">
+            <h3>Meine Einteilungen</h3>
+            <button class="btn ghost" id="btnRefreshMine">Aktualisieren</button>
+          </div>
+          <div id="mineList" class="list"></div>
+          <hr style="margin:12px 0; opacity:.25;">
+          <div class="row">
+            <h3>Nicht verfügbar</h3>
+          </div>
+          <div id="unavailList" class="list"></div>
+
+          <p class="muted small">Check-in: am selben Tag. Nachtragen: ab Folgetag (mit Hinweis).</p>
+        </div>
+
+        <!-- BILLING -->
+        <div class="panel" id="panel-billing" style="display:none;">
+          <div class="row">
+            <h3>Abrechnung</h3>
+          </div>
+
+          <div class="grid billingGrid">
+            <label>Jahr</label>
+            <input id="billYear" type="number" min="2020" max="2100" />
+
+            <label>Halbjahr</label>
+            <select id="billHalf">
+              <option value="H1">H1 (Jan–Jun)</option>
+              <option value="H2">H2 (Jul–Dez)</option>
+            </select>
+
+            <div></div>
+            <button class="btn" id="btnBilling">Berechnen</button>
+          </div>
+
+          <div class="summary" id="billingSummary" style="display:none;"></div>
+          <div id="billingList" class="list"></div>
+        </div>
+
+        <!-- ADMIN -->
+        <div class="panel" id="panel-admin" style="display:none;">
+          <div class="row">
+            <h3>Admin</h3>
+            <span class="muted">Trainingsstatus & Benutzer</span>
+          </div>
+
+          <div class="tabs subTabs">
+            <button class="tab active" data-subtab="adminTrainings">Trainings</button>
+            <button class="tab" data-subtab="adminUsers">Benutzer</button>
+          </div>
+
+          <!-- Admin: Trainings -->
+          <div id="panel-adminTrainings">
+            <div class="muted small" style="margin:6px 0 8px;">
+              „ausgefallen“ → Einteilungen werden nicht abgerechnet.
+            </div>
+            <div id="adminTrainingsList" class="list"></div>
+
+            <!-- duplicate admin filter removed (kept the one inside panel-adminTrainings) -->
+          </div>
+
+            <!-- FILTER BAR ADMIN -->
+            <div class="filterbar">
+              <div class="filter">
+                <label>Monat</label>
+                <select id="filterAdminMonth">
+                  <option value="ALL">Alle</option>
+                </select>
+              </div>
+              <div class="filter">
+                <label>Gruppe</label>
+                <select id="filterAdminGroup">
+                  <option value="ALL">Alle</option>
+                </select>
+              </div>
+              <div class="filter">
+                <label>Status</label>
+                <select id="filterAdminStatus">
+                  <option value="geplant">Aktiv / Geplant</option>
+                  <option value="stattgefunden">stattgefunden</option>
+                  <option value="ausgefallen">ausgefallen</option>
+                  <option value="ALL">Alle</option>
+                </select>
+              </div>
+              <button class="btn ghost" id="btnAdminRefresh">Aktualisieren</button>
+            </div>
+
+          <!-- Admin: Users -->
+          <div id="panel-adminUsers" style="display:none;">
+            <div class="row">
+              <h3>Benutzerverwaltung</h3>
+              <button class="btn ghost" id="btnAdminUsersRefresh">Aktualisieren</button>
+            </div>
+
+            <div class="card inner" style="margin-top:10px;">
+              <h3>Trainer anlegen / bearbeiten</h3>
+              <div class="grid">
+                <label>trainer_id</label><input id="u_trainer_id" placeholder="T001">
+                <label>Name</label><input id="u_name" placeholder="Max Mustermann">
+                <label>Email</label><input id="u_email" placeholder="max@…">
+                <label>PIN</label><input id="u_pin" placeholder="1234" inputmode="numeric">
+                <label>Stundensatz (€)</label><input id="u_rate" placeholder="15" inputmode="decimal">
+                <label>Aktiv</label>
+                <select id="u_aktiv"><option value="TRUE">TRUE</option><option value="FALSE">FALSE</option></select>
+                <label>Admin</label>
+                <select id="u_admin"><option value="FALSE">FALSE</option><option value="TRUE">TRUE</option></select>
+                <div></div>
+                <button class="btn" id="btnAdminUserSave">Speichern</button>
+              </div>
+            </div>
+
+            <div id="adminUsersList" class="list" style="margin-top:12px;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROFILE MODAL -->
+      <div class="modal" id="profileModal" style="display:none;">
+        <div class="sheet">
+          <div class="sheetHeader">
+            <div>
+              <div class="sheetTitle">Trainer-Details</div>
+              <div class="sheetSub" id="profileSub"></div>
+            </div>
+            <button class="btn ghost small" id="profileClose">Schließen</button>
+          </div>
+
+          <div class="sheetBody">
+            <div class="kv">
+              <div class="k">Name</div><div class="v" id="profileName"></div>
+              <div class="k">Trainer ID</div><div class="v" id="profileId"></div>
+              <div class="k">Rolle</div><div class="v" id="profileRole"></div>
+              <div class="k">Stundensatz</div><div class="v" id="profileRate"></div>
+              <div class="k">E-Mail</div><div class="v" id="profileEmail"></div>
+            </div>
+
+            <hr style="margin:14px 0; opacity:.25;">
+
+            <div class="row" style="align-items:flex-end;">
+              <div style="flex:1;">
+                <label>Aktuelle PIN</label>
+                <input id="pinOld" type="password" inputmode="numeric" placeholder="****">
+              </div>
+              <div style="flex:1;">
+                <label>Neue PIN (4–8 Ziffern)</label>
+                <input id="pinNew" type="password" inputmode="numeric" placeholder="****">
+              </div>
+            </div>
+            <div class="row" style="margin-top:10px;">
+              <button class="btn" id="btnPinSave">PIN ändern</button>
+              <div class="msg small" id="pinMsg" style="display:none;"></div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="userbox" id="userBox" aria-live="polite"></div>
-    </header>
 
-    <div class="card" id="cardLogin">
-      <h2>Login</h2>
-      <p class="muted small">Trainer-ID und PIN eingeben, um Trainings zu verwalten.</p>
-      <form id="loginForm" class="grid" autocomplete="one-time-code">
-        <label>Trainer-ID
-          <input type="text" name="trainerId" inputmode="numeric" placeholder="z. B. 102" required>
-        </label>
-        <label>PIN
-          <input type="password" name="pin" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" placeholder="4–8 Ziffern" required>
-        </label>
-        <div style="grid-column:1/-1;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <button type="submit" class="btn">Anmelden</button>
-          <div id="loginMsg" class="muted small" role="status"></div>
-        </div>
-      </form>
-    </div>
+      <!-- TRAINING DETAILS MODAL -->
+      <div class="modal" id="trainingModal" style="display:none;">
+        <div class="sheet">
+          <div class="sheetHeader">
+            <div>
+              <div class="sheetTitle">Training-Details</div>
+              <div class="sheetSub" id="trainingSub"></div>
+            </div>
+            <button class="btn ghost small" id="trainingClose">Schließen</button>
+          </div>
 
-    <div id="cardApp" class="card hidden">
-      <div class="row">
-        <div>
-          <h2>Übersicht</h2>
-          <p class="muted small">Trainings, eigene Einsätze und Abmeldungen</p>
-        </div>
-        <div class="tabs" role="tablist">
-          <button class="tab active" data-tab="upcoming" role="tab">Bevorstehend</button>
-          <button class="tab" data-tab="mine" role="tab">Meine Einsätze</button>
-          <button class="tab" data-tab="away" role="tab">Abmeldungen</button>
+          <div class="sheetBody">
+            <div class="list" id="trainingSignupList"></div>
+            <hr style="margin:12px 0; opacity:.25;">
+            <div class="muted small" style="margin:0 0 8px;">Nicht verfügbar</div>
+            <div class="list" id="trainingUnavailableList"></div>
+
+          </div>
         </div>
       </div>
 
-      <section class="panel" data-panel="upcoming">
-        <div class="filters">
-          <div class="field">
-            <label for="searchUpcoming">Suche / Filter</label>
-            <input id="searchUpcoming" type="search" placeholder="Gruppe, Ort oder Datum" aria-label="Trainings filtern">
-          </div>
-          <button class="btn small ghost" id="btnRefresh">Aktualisieren</button>
-        </div>
-        <div id="listUpcoming" class="list" aria-live="polite"></div>
-      </section>
+      <script>
+      const LS_TOKEN = "vh_token";
+      let token = localStorage.getItem(LS_TOKEN) || "";
+      let sessionUser = null;
 
-      <section class="panel hidden" data-panel="mine">
-        <div class="filters">
-          <div class="field">
-            <label for="searchMine">Suche</label>
-            <input id="searchMine" type="search" placeholder="Gruppe oder Datum" aria-label="Meine Einsätze filtern">
-          </div>
-        </div>
-        <div id="listMine" class="list" aria-live="polite"></div>
-      </section>
+      let allTrainings = [];
+      let allMine = [];
 
-      <section class="panel hidden" data-panel="away">
-        <p class="muted small">Eigene Abmeldungen für geplante Trainings.</p>
-        <div id="listAway" class="list" aria-live="polite"></div>
-      </section>
-    </div>
-  </div>
+      const $ = (id) => document.getElementById(id);
 
-  <script>
-    const els = {
-      loginForm: document.getElementById('loginForm'),
-      loginMsg: document.getElementById('loginMsg'),
-      cardLogin: document.getElementById('cardLogin'),
-      cardApp: document.getElementById('cardApp'),
-      userBox: document.getElementById('userBox'),
-      btnRefresh: document.getElementById('btnRefresh'),
-      searchUpcoming: document.getElementById('searchUpcoming'),
-      searchMine: document.getElementById('searchMine'),
-      listUpcoming: document.getElementById('listUpcoming'),
-      listMine: document.getElementById('listMine'),
-      listAway: document.getElementById('listAway'),
-    };
-
-    const state = { token: null, user: null, data: null };
-
-    function setMessage(el, msg, ok=false){
-      el.textContent = msg || '';
-      el.style.color = ok ? 'var(--ok)' : 'var(--muted)';
-    }
-
-    function toggle(el, show){
-      el.classList[show ? 'remove' : 'add']('hidden');
-    }
-
-    function renderUser(){
-      els.userBox.innerHTML = '';
-      if(!state.user){
-        const badge = document.createElement('div');
-        badge.className = 'user';
-        badge.textContent = 'Nicht angemeldet';
-        els.userBox.appendChild(badge);
-        return;
+      function showLoginMsg(msg) {
+        const el = $("loginMsg");
+        if (!el) return;
+        el.textContent = msg || "";
+        el.style.display = msg ? "block" : "none";
       }
-      const user = document.createElement('div');
-      user.className = 'user';
-      user.textContent = `${state.user.name} · ${state.user.email || ''}`;
-      const logout = document.createElement('button');
-      logout.className = 'btn small ghost';
-      logout.textContent = 'Logout';
-      logout.addEventListener('click', onLogout);
-      els.userBox.append(user, logout);
-    }
 
-    function callApi(name, ...args){
-      return new Promise(resolve => {
-        const runner = google.script.run
-          .withFailureHandler(err => resolve({ ok:false, error: err && err.message ? err.message : String(err) }))
-          .withSuccessHandler(res => resolve(res || { ok:false, error:'Unbekannte Antwort' }));
-        runner[name](...args);
-      });
-    }
-
-    async function onLogin(ev){
-      ev.preventDefault();
-      const form = new FormData(ev.target);
-      const trainerId = form.get('trainerId');
-      const pin = form.get('pin');
-      setMessage(els.loginMsg, 'Anmeldung läuft...');
-      const res = await callApi('apiLogin', trainerId, pin);
-      if(!res.ok){
-        setMessage(els.loginMsg, res.error || 'Login fehlgeschlagen');
-        return;
-      }
-      state.token = res.token;
-      state.user = res.user;
-      renderUser();
-      toggle(els.cardLogin, false);
-      toggle(els.cardApp, true);
-      await loadData();
-    }
-
-    async function loadData(){
-      setMessage(els.loginMsg, '');
-      const res = await callApi('apiBootstrap', state.token);
-      if(!res.ok){
-        setMessage(els.loginMsg, res.error || 'Fehler beim Laden');
-        return;
-      }
-      state.data = res;
-      renderUpcoming();
-      renderMine();
-      renderAway();
-    }
-
-    async function onLogout(){
-      await callApi('apiLogout', state.token);
-      state.token = null;
-      state.user = null;
-      state.data = null;
-      renderUser();
-      toggle(els.cardApp, false);
-      toggle(els.cardLogin, true);
-      els.loginForm.reset();
-      setMessage(els.loginMsg, 'Abgemeldet.', true);
-    }
-
-    function badge(text, cls=''){ const b = document.createElement('span'); b.className = `badge ${cls}`.trim(); b.textContent = text; return b; }
-
-    function renderUpcoming(){
-      const list = els.listUpcoming;
-      list.innerHTML='';
-      const query = (els.searchUpcoming.value || '').toLowerCase();
-      const items = (state.data?.upcoming || []).filter(it =>
-        !query || `${it.gruppe||''} ${it.ort||''} ${it.datum||''} ${it.start||''}`.toLowerCase().includes(query)
-      );
-      if(!items.length){ list.innerHTML = '<div class="empty">Keine geplanten Trainings.</div>'; return; }
-      items.forEach(tr => {
-        const it = document.createElement('div');
-        it.className = 'item';
-        const main = document.createElement('div');
-        main.className = 'itemMain';
-        main.innerHTML = `<div class="itemTitle">${tr.gruppe||'Training'}</div>
-          <div class="itemSub">${tr.datum||''} · ${tr.start||''}–${tr.ende||''} · ${tr.ort||''}</div>`;
-        const badges = document.createElement('div'); badges.className='badges';
-        badges.append(
-          badge(tr.status || 'geplant', tr.status==='geplant' ? 'ok' : 'warn'),
-          badge(tr.offen_text || 'Planung', tr.offen > 0 ? 'warn' : 'ok')
-        );
-        if(tr.is_unavailable) badges.append(badge('Abgemeldet', 'danger'));
-        main.appendChild(badges);
-        const act = document.createElement('div');
-        act.className='itemActions';
-        const btn = document.createElement('button');
-        btn.className='btn small';
-        btn.textContent = tr.is_unavailable ? 'Abmeldung aufheben' : 'Nicht verfügbar';
-        btn.addEventListener('click', () => toggleUnavailable(tr));
-        act.appendChild(btn);
-        it.append(main, act);
-        list.appendChild(it);
-      });
-    }
-
-    function renderMine(){
-      const list = els.listMine;
-      list.innerHTML='';
-      const query = (els.searchMine.value || '').toLowerCase();
-      const items = (state.data?.mineActive || []).filter(it =>
-        !query || `${it.gruppe||''} ${it.training_datum||''} ${it.start||''}`.toLowerCase().includes(query)
-      );
-      if(!items.length){ list.innerHTML = '<div class="empty">Keine aktiven Einsätze.</div>'; return; }
-      items.forEach(ei => {
-        const it = document.createElement('div'); it.className='item';
-        const main = document.createElement('div'); main.className='itemMain';
-        main.innerHTML = `<div class="itemTitle">${ei.gruppe||'Einsatz'}</div>
-          <div class="itemSub">${ei.training_datum||''} · ${ei.start||''}–${ei.ende||''}</div>`;
-        const badges = document.createElement('div'); badges.className='badges';
-        if(ei.rolle) badges.append(badge(ei.rolle,'ok'));
-        if(ei.attendance) badges.append(badge(ei.attendance,'warn'));
-        main.appendChild(badges);
-        const act = document.createElement('div'); act.className='itemActions';
-        const btn = document.createElement('button'); btn.className='btn small ghost';
-        btn.textContent = 'Austragen';
-        btn.addEventListener('click', () => leaveAssignment(ei));
-        act.appendChild(btn);
-        it.append(main, act);
-        list.appendChild(it);
-      });
-    }
-
-    function renderAway(){
-      const list = els.listAway;
-      list.innerHTML='';
-      const items = state.data?.myUnavailable || [];
-      if(!items.length){ list.innerHTML='<div class="empty">Keine Abmeldungen vorhanden.</div>'; return; }
-      items.forEach(ab => {
-        const it = document.createElement('div'); it.className='item';
-        const main = document.createElement('div'); main.className='itemMain';
-        main.innerHTML = `<div class="itemTitle">${ab.label||ab.training_id}</div>`;
-        const act = document.createElement('div'); act.className='itemActions';
-        const btn = document.createElement('button'); btn.className='btn small';
-        btn.textContent = 'Zurücknehmen';
-        btn.addEventListener('click', () => toggleUnavailable({ training_id: ab.training_id, is_unavailable: true }));
-        act.appendChild(btn);
-        it.append(main, act);
-        list.appendChild(it);
-      });
-    }
-
-    async function toggleUnavailable(tr){
-      const wantsUnavailable = !tr.is_unavailable;
-      const res = wantsUnavailable
-        ? await callApi('apiSetUnavailable', state.token, tr.training_id, '')
-        : await callApi('apiUnsetUnavailable', state.token, tr.training_id);
-      if(!res.ok){ alert(res.error || 'Aktion fehlgeschlagen'); return; }
-      await loadData();
-    }
-
-    async function leaveAssignment(ei){
-      const res = await callApi('apiWithdraw', state.token, ei.einteilung_id);
-      if(!res.ok){ alert(res.error || 'Austragen fehlgeschlagen'); return; }
-      await loadData();
-    }
-
-    function initTabs(){
-      document.querySelectorAll('[data-tab]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
-          document.querySelectorAll('[data-panel]').forEach(p => p.classList.add('hidden'));
-          btn.classList.add('active');
-          const panel = document.querySelector(`[data-panel="${btn.dataset.tab}"]`);
-          if(panel) panel.classList.remove('hidden');
+      function api(name, ...args) {
+        // ALWAYS resolve -> no silent failures
+        return new Promise((resolve) => {
+          google.script.run
+            .withSuccessHandler((res) => resolve(res))
+            .withFailureHandler((err) => {
+              const msg =
+                (err && err.message) ? err.message :
+                (typeof err === "string" ? err : JSON.stringify(err));
+              resolve({ ok: false, error: msg });
+            })[name](...args);
         });
-      });
-    }
+      }
 
-    els.loginForm.addEventListener('submit', onLogin);
-    els.btnRefresh.addEventListener('click', loadData);
-    els.searchUpcoming.addEventListener('input', renderUpcoming);
-    els.searchMine.addEventListener('input', renderMine);
-    initTabs();
-  </script>
-</body>
+      function setActiveTab(tab) {
+        document.querySelectorAll(".tabs .tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+        document.querySelectorAll(".panel").forEach(p => p.style.display = "none");
+        const panel = $("panel-" + tab);
+        if (panel) panel.style.display = "block";
+      }
+
+      function setActiveSubtab(subtab) {
+        document.querySelectorAll(".subTabs .tab").forEach(b => b.classList.toggle("active", b.dataset.subtab === subtab));
+        $("panel-adminTrainings").style.display = (subtab === "adminTrainings") ? "block" : "none";
+        $("panel-adminUsers").style.display = (subtab === "adminUsers") ? "block" : "none";
+      }
+
+      async function loadTrainerSelect() {
+        const res = await api("apiListActiveTrainers");
+        const sel = $("trainerSelect");
+        sel.innerHTML = "";
+        if (!res.ok) {
+          sel.innerHTML = `<option value="">Fehler</option>`;
+          showLoginMsg(res.error || "Trainerliste konnte nicht geladen werden.");
+          return;
+        }
+        res.items.forEach(t => {
+          const opt = document.createElement("option");
+          opt.value = t.trainer_id;
+          opt.textContent = t.name + (t.email ? ` (${t.email})` : "");
+          sel.appendChild(opt);
+        });
+      }
+
+      function initFilters() {
+        const months = new Map();
+        const groups = new Set();
+
+        allTrainings.forEach(t => {
+          const key = (t.datum || "").slice(3,10); // "MM.YYYY" from "DD.MM.YYYY"
+          if (key) months.set(key, key);
+          if (t.gruppe) groups.add(t.gruppe);
+        });
+
+        const mSel = $("filterMonth");
+        const gSel = $("filterGroup");
+
+        const curMonth = mSel.value;
+        const curGroup = gSel.value;
+
+        mSel.innerHTML = `<option value="ALL">Alle</option>` +
+          Array.from(months.values()).sort((a,b)=>a.localeCompare(b, "de")).map(m => `<option value="${m}">${m}</option>`).join("");
+
+        gSel.innerHTML = `<option value="ALL">Alle</option>` +
+          Array.from(groups.values()).sort((a,b)=>a.localeCompare(b, "de")).map(g => `<option value="${g}">${g}</option>`).join("");
+
+        if (curMonth) mSel.value = curMonth;
+        if (curGroup) gSel.value = curGroup;
+      }
+
+      function getFilteredTrainings() {
+        const m = $("filterMonth").value;
+        const g = $("filterGroup").value;
+        const critical = $("filterCritical").value === "1";
+        return allTrainings.filter(t => {
+          if (m !== "ALL") {
+            const key = (t.datum || "").slice(3,10);
+            if (key !== m) return false;
+          }
+          if (g !== "ALL" && String(t.gruppe) !== String(g)) return false;
+          if (critical && !(Number(t.eingeteilt || 0) === 0)) return false;
+          return true;
+        });
+      }
+
+      function renderTrainings(list, container, withAdminButtons=false) {
+        container.innerHTML = "";
+        if (!list || !list.length) {
+          container.innerHTML = `<div class="empty">Keine Einträge.</div>`;
+          return;
+        }
+
+        list.forEach(t => {
+          const badges = [];
+
+          const assigned = (typeof t.eingeteilt === "number") ? t.eingeteilt
+                          : (typeof t.benoetigt_trainer === "number" && typeof t.offen === "number")
+                            ? (t.benoetigt_trainer - t.offen)
+                            : 0;
+
+          badges.push(`<span class="badge group">${t.gruppe || ""}</span>`);
+          badges.push(`<span class="badge">${t.status || ""}</span>`);
+
+          if (assigned >= 1) badges.push(`<span class="badge ok">Minimum ✓</span>`);
+          else badges.push(`<span class="badge danger">Kein Trainer!</span>`);
+
+          if (t.offen === 0) badges.push(`<span class="badge ok">Optimal</span>`);
+          else badges.push(`<span class="badge warn">Noch ${t.offen}</span>`);
+
+          if (t.is_unavailable) badges.push(`<span class="badge info">Nicht verfügbar</span>`);
+
+          // ... innerhalb list.forEach(t => { ... })
+
+const timeLine = (t.start && t.ende) ? `${t.start}–${t.ende}` : "";
+const subLine = [timeLine, t.ort].filter(Boolean).join(" · ");
+
+let actions = "";
+
+// ✅ Admin-Ansicht: NUR Details + Statusbuttons
+if (withAdminButtons) {
+  actions = `
+    <button class="btn small ghost" data-details="${t.training_id}">Details</button>
+    <button class="btn small" data-admin-status="stattgefunden" data-training="${t.training_id}">stattgefunden</button>
+    <button class="btn small danger" data-admin-status="ausgefallen" data-training="${t.training_id}">ausgefallen</button>
+  `;
+} else {
+  // ✅ normale Ansicht: Details + Nicht verfügbar + Übernehme
+  const disabledEnroll = (t.status !== "geplant") || (Number(t.offen) <= 0) || !!t.is_unavailable;
+
+  const unavailBtn = t.is_unavailable
+    ? `<button class="btn small" data-unavail-off="${t.training_id}">Wieder verfügbar</button>`
+    : `<button class="btn small ghost" data-unavail-on="${t.training_id}">Nicht verfügbar</button>`;
+
+  actions = `
+    <button class="btn small ghost" data-details="${t.training_id}">Details</button>
+    ${unavailBtn}
+    <button class="btn small" ${disabledEnroll ? "disabled": ""} data-enroll="${t.training_id}">Übernehme</button>
+  `;
+}
+
+          const html = `
+            <div class="item">
+              <div class="itemMain">
+                <div class="itemTitle">
+                  <span class="date">${t.datum || ""}</span>
+                  ${t.gruppe ? ` · <b>${t.gruppe}</b>` : ""}
+                </div>
+                <div class="itemSub">${subLine || ""}</div>
+                <div class="badges">${badges.join("")}</div>
+              </div>
+              <div class="itemActions">${actions}</div>
+            </div>
+          `;
+          container.insertAdjacentHTML("beforeend", html);
+        });
+
+        // details
+        container.querySelectorAll("[data-details]").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const id = btn.getAttribute("data-details");
+            await openTrainingDetails(id);
+          });
+        });
+
+        // unavailable toggle + enroll (nur wenn withAdminButtons=false)
+        if (!withAdminButtons) {
+          container.querySelectorAll("[data-unavail-on]").forEach(btn => {
+            btn.addEventListener("click", async () => {
+              const tid = btn.getAttribute("data-unavail-on");
+              const res = await api("apiSetUnavailable", token, tid, "");
+              if (!res.ok) return alert(res.error || "Fehler");
+              await refreshAll();
+            });
+          });
+          container.querySelectorAll("[data-unavail-off]").forEach(btn => {
+            btn.addEventListener("click", async () => {
+              const tid = btn.getAttribute("data-unavail-off");
+              const res = await api("apiUnsetUnavailable", token, tid);
+              if (!res.ok) return alert(res.error || "Fehler");
+              await refreshAll();
+            });
+          });
+
+          // enroll
+          container.querySelectorAll("[data-enroll]").forEach(btn => {
+            btn.addEventListener("click", async () => {
+              btn.disabled = true;
+              try {
+                const id = btn.getAttribute("data-enroll");
+                const res = await api("apiEnroll", token, id);
+                if (!res.ok) alert(res.error || "Fehler");
+                await refreshAll();
+                setActiveTab("mine");
+              } finally {
+                btn.disabled = false;
+              }
+            });
+          });
+        }
+
+        // admin status (nur wenn withAdminButtons=true)
+        if (withAdminButtons) {
+          container.querySelectorAll("[data-admin-status]").forEach(btn => {
+            btn.addEventListener("click", async () => {
+              const trainingId = btn.getAttribute("data-training");
+              const status = btn.getAttribute("data-admin-status");
+              let reason = "";
+              if (status === "ausgefallen") {
+                reason = prompt("Ausfallgrund (z.B. Ferien/Krank/…):", "Ferien") || "Admin";
+              }
+              const res = await api("apiAdminSetTrainingStatus", token, trainingId, status, reason);
+              if (!res.ok) alert(res.error || "Fehler");
+              await refreshAll();
+            });
+          });
+        }
+      }
+
+      // ===== Admin filters =====
+      function initAdminFilters() {
+        const months = new Map();
+        const groups = new Set();
+        allTrainings.forEach(t => {
+          const key = (t.datum || "").slice(3,10);
+          if (key) months.set(key, key);
+          if (t.gruppe) groups.add(t.gruppe);
+        });
+
+        const mSel = $("filterAdminMonth");
+        const gSel = $("filterAdminGroup");
+
+        const curMonth = mSel && mSel.value;
+        const curGroup = gSel && gSel.value;
+
+        if (mSel) mSel.innerHTML = `<option value="ALL">Alle</option>` +
+          Array.from(months.values()).sort((a,b)=>a.localeCompare(b, "de")).map(m => `<option value="${m}">${m}</option>`).join("");
+
+        if (gSel) gSel.innerHTML = `<option value="ALL">Alle</option>` +
+          Array.from(groups.values()).sort((a,b)=>a.localeCompare(b, "de")).map(g => `<option value="${g}">${g}</option>`).join("");
+
+        if (mSel && curMonth) mSel.value = curMonth;
+        if (gSel && curGroup) gSel.value = curGroup;
+      }
+
+      function getFilteredAdminTrainings() {
+        const m = $("filterAdminMonth").value;
+        const g = $("filterAdminGroup").value;
+        const status = $("filterAdminStatus").value;
+        return allTrainings.filter(t => {
+          if (m !== "ALL") {
+            const key = (t.datum || "").slice(3,10);
+            if (key !== m) return false;
+          }
+          if (g !== "ALL" && String(t.gruppe) !== String(g)) return false;
+          if (status && status !== "ALL" && String(t.status) !== String(status)) return false;
+          return true;
+        });
+      }
+
+      function renderMine(list) {
+        const container = $("mineList");
+        container.innerHTML = "";
+        if (!list || !list.length) {
+          container.innerHTML = `<div class="empty">Noch keine Einteilungen.</div>`;
+          return;
+        }
+
+        list.forEach(e => {
+          const badges = [];
+          if (e.gruppe) badges.push(`<span class="badge group">${e.gruppe}</span>`);
+          if (e.training_status) badges.push(`<span class="badge">${e.training_status}</span>`);
+          if (e.attendance) badges.push(`<span class="badge">${e.attendance}</span>`);
+          if (e.checkin_am) badges.push(`<span class="badge ok">Check-in: ${e.checkin_am}</span>`);
+
+          const sub = [e.start && e.ende ? `${e.start}–${e.ende}` : "", e.ort, e.rolle ? `Rolle: ${e.rolle}` : ""]
+            .filter(Boolean).join(" · ");
+
+          let actions = `
+            <button class="btn small ghost" data-details="${e.training_id}">Details</button>
+            <button class="btn small" data-checkin="today" data-eid="${e.einteilung_id}">Check-in</button>
+            <button class="btn small danger" data-withdraw="${e.einteilung_id}">Austragen</button>
+          `;
+
+          const html = `
+            <div class="item">
+              <div class="itemMain">
+                <div class="itemTitle">${e.datum || ""} <b>${e.gruppe || ""}</b></div>
+                <div class="itemSub">${sub}</div>
+                <div class="badges">${badges.join("")}</div>
+              </div>
+              <div class="itemActions">${actions}</div>
+            </div>
+          `;
+          container.insertAdjacentHTML("beforeend", html);
+        });
+
+        container.querySelectorAll("[data-details]").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            await openTrainingDetails(btn.getAttribute("data-details"));
+          });
+        });
+
+        container.querySelectorAll("[data-withdraw]").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            if (!confirm("Wirklich austragen?")) return;
+            const id = btn.getAttribute("data-withdraw");
+            const res = await api("apiWithdraw", token, id);
+            if (!res.ok) alert(res.error || "Fehler");
+            await refreshAll();
+          });
+        });
+
+        container.querySelectorAll("[data-checkin]").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const mode = btn.getAttribute("data-checkin"); // today|late
+            const eid = btn.getAttribute("data-eid");
+            const res = await api("apiCheckin", token, eid, mode);
+            if (!res.ok) alert(res.error || "Fehler");
+            await refreshAll();
+          });
+        });
+      }
+
+      function renderUnavailable(list) {
+        const el = $("unavailList");
+        if (!el) return;
+        el.innerHTML = "";
+
+        if (!list || !list.length) {
+          el.innerHTML = `<div class="empty">Keine Abmeldungen gesetzt.</div>`;
+          return;
+        }
+
+        list.forEach(x => {
+          el.insertAdjacentHTML("beforeend", `
+            <div class="item">
+              <div class="itemMain">
+                <div class="itemTitle">${x.label || ""}</div>
+                <div class="badges"><span class="badge info">Nicht verfügbar</span></div>
+              </div>
+              <div class="itemActions">
+                <button class="btn small" data-unavail-off="${x.training_id}">Wieder verfügbar</button>
+              </div>
+            </div>
+          `);
+        });
+
+        el.querySelectorAll("[data-unavail-off]").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const tid = btn.getAttribute("data-unavail-off");
+            const res = await api("apiUnsetUnavailable", token, tid);
+            if (!res.ok) return alert(res.error || "Fehler");
+            await refreshAll();
+          });
+        });
+      }
+
+      function renderBilling(res) {
+        const sum = $("billingSummary");
+        const listEl = $("billingList");
+        sum.style.display = "none";
+        listEl.innerHTML = "";
+
+        if (!res.ok) {
+          alert(res.error || "Fehler");
+          return;
+        }
+
+        sum.style.display = "block";
+        const totalItemsAmount = Number(res.totalAmount || 0) + Number(res.pendingTotalAmount || 0);
+        const totalItemsHours = Number(res.totalHours || 0) + Number(res.pendingTotalHours || 0);
+        sum.innerHTML = `
+          <b>Abgerechnet:</b> ${res.totalAmount?.toFixed ? res.totalAmount.toFixed(2) : res.totalAmount} € ·
+          <b>Stunden:</b> ${res.totalHours?.toFixed ? res.totalHours.toFixed(2) : res.totalHours} ·
+          <b>Ausstehend:</b> ${res.pendingTotalAmount?.toFixed ? res.pendingTotalAmount.toFixed(2) : res.pendingTotalAmount} € ·
+          <b>Gesamt:</b> ${totalItemsAmount.toFixed(2)} € / ${totalItemsHours.toFixed(2)}h
+        `;
+
+        // ABGERECHNETE ITEMS
+        if (res.items && res.items.length > 0) {
+          listEl.insertAdjacentHTML("beforeend", `<div style="margin: 16px 0 10px; font-weight: 600; padding: 10px; background: rgba(34, 197, 94, 0.1); border-left: 3px solid #22c55e; border-radius: 4px;">✓ Abgerechnet (${res.items.length})</div>`);
+
+          res.items.forEach(it => {
+            const badges = [];
+            badges.push(`<span class="badge ok">${Number(it.amount).toFixed(2)} €</span>`);
+            badges.push(`<span class="badge">${it.hours}h</span>`);
+
+            let actions = `<button class="btn small ghost" data-details="${it.training_id}">Details</button>`;
+            if (sessionUser && sessionUser.is_admin) {
+              actions += `
+                <button class="btn small" data-admin-status="stattgefunden" data-training="${it.training_id}">stattgefunden</button>
+                <button class="btn small danger" data-admin-status="ausgefallen" data-training="${it.training_id}">ausgefallen</button>
+              `;
+            }
+
+            listEl.insertAdjacentHTML("beforeend", `
+              <div class="item" style="background: rgba(34, 197, 94, 0.05); border-left: 3px solid #22c55e;">
+                <div class="itemMain">
+                  <div class="itemTitle">${it.datum} <b>${it.gruppe || ""}</b></div>
+                  <div class="itemSub">${[it.start && it.ende ? `${it.start}–${it.ende}` : "", it.ort].filter(Boolean).join(" · ")}</div>
+                  <div class="badges">${badges.join("")}</div>
+                </div>
+                <div class="itemActions">${actions}</div>
+              </div>
+            `);
+          });
+        }
+
+        // AUSSTEHENDE ITEMS
+        if (res.pending && res.pending.length > 0) {
+          listEl.insertAdjacentHTML("beforeend", `<div style="margin: 16px 0 10px; font-weight: 600; padding: 10px; background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; border-radius: 4px;">⏳ Offen / Ausstehend (${res.pending.length})</div>`);
+
+          res.pending.forEach(it => {
+            const badges = [];
+            badges.push(`<span class="badge warn">${it.status}</span>`);
+            badges.push(`<span class="badge">${Number(it.amount).toFixed(2)} €</span>`);
+            badges.push(`<span class="badge">${it.hours}h</span>`);
+
+            let actions = `<button class="btn small ghost" data-details="${it.training_id}">Details</button>`;
+
+            listEl.insertAdjacentHTML("beforeend", `
+              <div class="item" style="background: rgba(245, 158, 11, 0.05); border-left: 3px solid #f59e0b;">
+                <div class="itemMain">
+                  <div class="itemTitle">${it.datum} <b>${it.gruppe || ""}</b></div>
+                  <div class="itemSub">${[it.start && it.ende ? `${it.start}–${it.ende}` : "", it.ort].filter(Boolean).join(" · ")}</div>
+                  <div class="badges">${badges.join("")}</div>
+                </div>
+                <div class="itemActions">${actions}</div>
+              </div>
+            `);
+          });
+        }
+
+        // Keine Items vorhanden
+        if ((!res.items || !res.items.length) && (!res.pending || !res.pending.length)) {
+          listEl.innerHTML = `<div class="empty">Keine Einträge im Zeitraum.</div>`;
+          return;
+        }
+
+        listEl.querySelectorAll("[data-details]").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            await openTrainingDetails(btn.getAttribute("data-details"));
+          });
+        });
+
+        listEl.querySelectorAll("[data-admin-status]").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const trainingId = btn.getAttribute("data-training");
+            const status = btn.getAttribute("data-admin-status");
+            let reason = "";
+            if (status === "ausgefallen") {
+              reason = prompt("Ausfallgrund (z.B. Ferien/Krank/…):", "Ferien") || "Admin";
+            }
+            const res2 = await api("apiAdminSetTrainingStatus", token, trainingId, status, reason);
+            if (!res2.ok) alert(res2.error || "Fehler");
+            await refreshAll();
+          });
+        });
+      }
+
+      async function tryBootstrap() {
+        if (!token) return false;
+
+        const res = await api("apiBootstrap", token);
+        if (!res.ok) return false;
+
+        sessionUser = res.user;
+        allTrainings = res.upcoming || [];
+        allMine = res.mineActive || [];
+
+        $("loginCard").style.display = "none";
+        $("mainCard").style.display = "block";
+        $("userbox").style.display = "flex";
+        $("userName").textContent = sessionUser.name + (sessionUser.is_admin ? " (Admin)" : "");
+
+        const now = new Date();
+        $("billYear").value = now.getFullYear();
+        $("billHalf").value = (now.getMonth() <= 5) ? "H1" : "H2";
+
+        initFilters();
+        renderTrainings(getFilteredTrainings(), $("trainingsList"), false);
+        renderMine(allMine);
+        renderUnavailable(res.myUnavailable || []);
+
+        if (sessionUser.is_admin) {
+          $("adminTabBtn").style.display = "inline-flex";
+          initAdminFilters();
+          renderTrainings(getFilteredAdminTrainings(), $("adminTrainingsList"), true);
+          await refreshAdminUsers(false);
+        } else {
+          $("adminTabBtn").style.display = "none";
+        }
+        return true;
+      }
+
+      async function refreshAll() {
+        const ok = await tryBootstrap();
+        if (!ok) {
+          token = "";
+          localStorage.removeItem(LS_TOKEN);
+          sessionUser = null;
+          $("loginCard").style.display = "block";
+          $("mainCard").style.display = "none";
+          $("userbox").style.display = "none";
+          showLoginMsg("Bitte erneut anmelden.");
+        }
+      }
+
+      // ===== Profile =====
+      function openModal(id) { $(id).style.display = "flex"; }
+      function closeModal(id) { $(id).style.display = "none"; }
+
+      async function openProfile() {
+        const res = await api("apiGetMyProfile", token);
+        if (!res.ok) return alert(res.error || "Fehler");
+        const t = res.trainer;
+
+        $("profileName").textContent = t.name;
+        $("profileId").textContent = t.trainer_id;
+        $("profileRole").textContent = t.rolle_standard + (t.is_admin ? " (Admin)" : "");
+        $("profileRate").textContent = (Number(t.stundensatz || 0)).toFixed(2) + " € / h";
+        $("profileEmail").textContent = t.email || "—";
+        $("profileSub").textContent = "Hier kannst du deine PIN ändern.";
+
+        $("pinOld").value = "";
+        $("pinNew").value = "";
+        $("pinMsg").style.display = "none";
+        $("pinMsg").textContent = "";
+
+        openModal("profileModal");
+      }
+
+      async function savePin() {
+        const oldPin = $("pinOld").value;
+        const newPin = $("pinNew").value;
+
+        const msg = $("pinMsg");
+        msg.style.display = "none";
+
+        const res = await api("apiChangeMyPin", token, oldPin, newPin);
+        if (!res.ok) {
+          msg.textContent = res.error || "Fehler";
+          msg.style.display = "block";
+          return;
+        }
+        msg.textContent = "PIN geändert.";
+        msg.style.display = "block";
+        $("pinOld").value = "";
+        $("pinNew").value = "";
+      }
+
+      // ===== Training details =====
+      async function openTrainingDetails(trainingId) {
+        const res = await api("apiTrainingDetails", token, trainingId);
+        if (!res.ok) return alert(res.error || "Fehler");
+
+        const t = res.training;
+        $("trainingSub").textContent = `${t.datum} · ${t.start}–${t.ende} · ${t.gruppe || ""} · ${t.ort || ""}`;
+
+        const list = $("trainingSignupList");
+        list.innerHTML = "";
+        // --- NEU: Unavailable unterhalb anzeigen ---
+        const ulist = $("trainingUnavailableList");
+        ulist.innerHTML = "";
+
+        if (!res.unavailable || !res.unavailable.length) {
+          ulist.innerHTML = `<div class="empty">Keine Abmeldungen gesetzt.</div>`;
+        } else {
+          res.unavailable.forEach(u => {
+            const badges = [];
+            badges.push(`<span class="badge info">Nicht verfügbar</span>`);
+            if (u.grund) badges.push(`<span class="badge warn">${u.grund}</span>`);
+            if (u.created_at) badges.push(`<span class="badge">${u.created_at}</span>`);
+
+            ulist.insertAdjacentHTML("beforeend", `
+              <div class="item">
+                <div class="itemMain">
+                  <div class="itemTitle"><b>${u.name}</b></div>
+                  <div class="badges">${badges.join("")}</div>
+                </div>
+              </div>
+            `);
+          });
+        }
+
+        if (!res.signups || !res.signups.length) {
+          list.innerHTML = `<div class="empty">Noch niemand eingetragen.</div>`;
+        } else {
+          res.signups.forEach(s => {
+            const badges = [];
+            if (s.rolle) badges.push(`<span class="badge">${s.rolle}</span>`);
+            if (s.checkin_am) badges.push(`<span class="badge ok">Check-in: ${s.checkin_am}</span>`);
+            if (s.attendance) badges.push(`<span class="badge">${s.attendance}</span>`);
+
+            list.insertAdjacentHTML("beforeend", `
+              <div class="item">
+                <div class="itemMain">
+                  <div class="itemTitle"><b>${s.name}</b></div>
+                  <div class="badges">${badges.join("")}</div>
+                </div>
+              </div>
+            `);
+          });
+        }
+
+        openModal("trainingModal");
+      }
+
+      // ===== Admin Users =====
+      function renderAdminUsers(items) {
+        const el = $("adminUsersList");
+        el.innerHTML = "";
+        if (!items || !items.length) {
+          el.innerHTML = `<div class="empty">Keine Trainer.</div>`;
+          return;
+        }
+
+        items.forEach(u => {
+          const badges = [];
+          badges.push(`<span class="badge">${u.aktiv}</span>`);
+          if (u.is_admin === "TRUE") badges.push(`<span class="badge ok">Admin</span>`);
+          badges.push(`<span class="badge warn">${Number(u.stundensatz || 0).toFixed(2)} €</span>`);
+
+          el.insertAdjacentHTML("beforeend", `
+            <div class="item">
+              <div class="itemMain">
+                <div class="itemTitle"><b>${u.name}</b> <span class="muted small">(${u.trainer_id})</span></div>
+                <div class="itemSub">${u.email || ""}</div>
+                <div class="badges">${badges.join("")}</div>
+              </div>
+              <div class="itemActions">
+                <button class="btn small ghost" data-edit-user="${u.trainer_id}">Bearbeiten</button>
+              </div>
+            </div>
+          `);
+        });
+
+        el.querySelectorAll("[data-edit-user]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const id = btn.getAttribute("data-edit-user");
+            const u = items.find(x => String(x.trainer_id) === String(id));
+            if (!u) return;
+            $("u_trainer_id").value = u.trainer_id || "";
+            $("u_name").value = u.name || "";
+            $("u_email").value = u.email || "";
+            $("u_pin").value = u.pin || "";
+            $("u_rate").value = u.stundensatz || "";
+            $("u_aktiv").value = u.aktiv || "TRUE";
+            $("u_admin").value = u.is_admin || "FALSE";
+            setActiveSubtab("adminUsers");
+          });
+        });
+      }
+
+      async function refreshAdminUsers(showToast=true) {
+        if (!sessionUser || !sessionUser.is_admin) return;
+        const res = await api("apiAdminListTrainers", token);
+        if (!res.ok) {
+          if (showToast) alert(res.error || "Fehler");
+          return;
+        }
+        renderAdminUsers(res.items || []);
+      }
+
+      // ===== Init / bindings =====
+      async function init() {
+        await loadTrainerSelect();
+
+        // tabs
+        document.querySelectorAll(".tab[data-tab]").forEach(btn => {
+        btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
+});
+
+
+        // admin subtabs
+        document.querySelectorAll(".subTabs .tab").forEach(btn => {
+          btn.addEventListener("click", () => setActiveSubtab(btn.dataset.subtab));
+        });
+
+        $("btnLogin").addEventListener("click", async () => {
+          showLoginMsg("");
+          const trainerId = $("trainerSelect").value;
+          const pin = $("pinInput").value;
+          if (!pin) return showLoginMsg("Bitte PIN eingeben.");
+
+          const res = await api("apiLogin", trainerId, pin);
+          if (!res.ok) return showLoginMsg(res.error || "Login fehlgeschlagen.");
+
+          token = res.token;
+          localStorage.setItem(LS_TOKEN, token);
+          $("pinInput").value = "";
+          await refreshAll();
+        });
+
+        $("btnLogout").addEventListener("click", async () => {
+          await api("apiLogout", token);
+          token = "";
+          localStorage.removeItem(LS_TOKEN);
+          sessionUser = null;
+          $("loginCard").style.display = "block";
+          $("mainCard").style.display = "none";
+          $("userbox").style.display = "none";
+          showLoginMsg("");
+        });
+
+        $("btnRefresh").addEventListener("click", refreshAll);
+        $("btnRefreshMine").addEventListener("click", refreshAll);
+
+        $("filterMonth").addEventListener("change", () => {
+        renderTrainings(getFilteredTrainings(), $("trainingsList"), false);
+        });
+        $("filterGroup").addEventListener("change", () => {
+        renderTrainings(getFilteredTrainings(), $("trainingsList"), false);
+        });
+        $("filterCritical").addEventListener("change", () => {
+        renderTrainings(getFilteredTrainings(), $("trainingsList"), false);
+        });
+
+        // admin filters (if present)
+        const fAdminMonth = $("filterAdminMonth");
+        if (fAdminMonth) fAdminMonth.addEventListener("change", () => renderTrainings(getFilteredAdminTrainings(), $("adminTrainingsList"), true));
+        const fAdminGroup = $("filterAdminGroup");
+        if (fAdminGroup) fAdminGroup.addEventListener("change", () => renderTrainings(getFilteredAdminTrainings(), $("adminTrainingsList"), true));
+        const fAdminStatus = $("filterAdminStatus");
+        if (fAdminStatus) fAdminStatus.addEventListener("change", () => renderTrainings(getFilteredAdminTrainings(), $("adminTrainingsList"), true));
+        const btnAdminRefresh = $("btnAdminRefresh");
+        if (btnAdminRefresh) btnAdminRefresh.addEventListener("click", () => renderTrainings(getFilteredAdminTrainings(), $("adminTrainingsList"), true));
+
+        $("btnBilling").addEventListener("click", async () => {
+          const year = Number($("billYear").value);
+          const half = $("billHalf").value;
+          const res = await api("apiBillingHalfyear", token, year, half);
+          renderBilling(res);
+        });
+
+        $("btnAdminUsersRefresh").addEventListener("click", () => refreshAdminUsers(true));
+        $("btnAdminUserSave").addEventListener("click", async () => {
+          const payload = {
+            trainer_id: $("u_trainer_id").value,
+            name: $("u_name").value,
+            email: $("u_email").value,
+            pin: $("u_pin").value,
+            stundensatz: $("u_rate").value,
+            aktiv: $("u_aktiv").value,
+            is_admin: $("u_admin").value,
+          };
+          const res = await api("apiAdminUpsertTrainer", token, payload);
+          if (!res.ok) return alert(res.error || "Fehler");
+          alert("Gespeichert.");
+          await refreshAdminUsers(false);
+        });
+
+        // profile modal bindings
+        $("userName").addEventListener("click", () => openProfile());
+        $("profileClose").addEventListener("click", () => closeModal("profileModal"));
+        $("btnPinSave").addEventListener("click", savePin);
+        $("profileModal").addEventListener("click", (e) => { if (e.target.id === "profileModal") closeModal("profileModal"); });
+
+        // training modal bindings
+        $("trainingClose").addEventListener("click", () => closeModal("trainingModal"));
+        $("trainingModal").addEventListener("click", (e) => { if (e.target.id === "trainingModal") closeModal("trainingModal"); });
+
+        // initial state
+        setActiveTab("trainings");
+        setActiveSubtab("adminTrainings");
+
+        if (token) {
+          const ok = await tryBootstrap();
+          if (!ok) {
+            token = "";
+            localStorage.removeItem(LS_TOKEN);
+          }
+        }
+      }
+
+      init();
+      </script>
+    </div>
+  </body>
 </html>
