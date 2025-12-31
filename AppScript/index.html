@@ -1,1 +1,333 @@
-<!-- Backup - will replace with fixed version -->
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, user-scalable=yes">
+  <?!= include('style'); ?>
+  <style>
+    .hidden{display:none !important}
+    .app{width:min(960px,100%);padding:14px 12px 28px}
+    @media (max-width:540px){
+      .app{padding:12px 10px 24px}
+    }
+
+    .topbar{flex-wrap:wrap;align-items:flex-start}
+    .brand{flex:1 1 auto;min-width:240px}
+    .userbox{flex-wrap:wrap;justify-content:flex-start}
+    .userbox .btn{width:auto}
+
+    .card{padding:12px}
+
+    .grid.compact{grid-template-columns:1fr 1fr}
+    @media (max-width:540px){
+      .grid.compact{grid-template-columns:1fr}
+    }
+
+    .panel{margin-top:12px}
+
+    .item{flex-direction:column;align-items:stretch}
+    .itemMain{min-width:0}
+    .itemActions{width:100%;justify-content:flex-start}
+    @media (min-width:721px){
+      .item{flex-direction:row}
+      .itemActions{width:auto;justify-content:flex-end}
+    }
+
+    .filters{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+    .filters .field{flex:1 1 180px;min-width:0}
+    .filters .btn.small{width:100%}
+    @media (min-width:720px){
+      .filters .btn.small{width:auto}
+    }
+
+    .badge{font-size:11px;padding:5px 9px}
+    .badges{gap:6px}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">VH</div>
+        <div>
+          <div class="title">Vereinshelfer · Trainer</div>
+          <div class="subtitle">Mobile Webapp für Trainings &amp; Einsätze</div>
+        </div>
+      </div>
+      <div class="userbox" id="userBox" aria-live="polite"></div>
+    </header>
+
+    <div class="card" id="cardLogin">
+      <h2>Login</h2>
+      <p class="muted small">Trainer-ID und PIN eingeben, um Trainings zu verwalten.</p>
+      <form id="loginForm" class="grid" autocomplete="one-time-code">
+        <label>Trainer-ID
+          <input type="text" name="trainerId" inputmode="numeric" placeholder="z. B. 102" required>
+        </label>
+        <label>PIN
+          <input type="password" name="pin" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" placeholder="4–8 Ziffern" required>
+        </label>
+        <div style="grid-column:1/-1;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button type="submit" class="btn">Anmelden</button>
+          <div id="loginMsg" class="muted small" role="status"></div>
+        </div>
+      </form>
+    </div>
+
+    <div id="cardApp" class="card hidden">
+      <div class="row">
+        <div>
+          <h2>Übersicht</h2>
+          <p class="muted small">Trainings, eigene Einsätze und Abmeldungen</p>
+        </div>
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-tab="upcoming" role="tab">Bevorstehend</button>
+          <button class="tab" data-tab="mine" role="tab">Meine Einsätze</button>
+          <button class="tab" data-tab="away" role="tab">Abmeldungen</button>
+        </div>
+      </div>
+
+      <section class="panel" data-panel="upcoming">
+        <div class="filters">
+          <div class="field">
+            <label for="searchUpcoming">Suche / Filter</label>
+            <input id="searchUpcoming" type="search" placeholder="Gruppe, Ort oder Datum" aria-label="Trainings filtern">
+          </div>
+          <button class="btn small ghost" id="btnRefresh">Aktualisieren</button>
+        </div>
+        <div id="listUpcoming" class="list" aria-live="polite"></div>
+      </section>
+
+      <section class="panel hidden" data-panel="mine">
+        <div class="filters">
+          <div class="field">
+            <label for="searchMine">Suche</label>
+            <input id="searchMine" type="search" placeholder="Gruppe oder Datum" aria-label="Meine Einsätze filtern">
+          </div>
+        </div>
+        <div id="listMine" class="list" aria-live="polite"></div>
+      </section>
+
+      <section class="panel hidden" data-panel="away">
+        <p class="muted small">Eigene Abmeldungen für geplante Trainings.</p>
+        <div id="listAway" class="list" aria-live="polite"></div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const els = {
+      loginForm: document.getElementById('loginForm'),
+      loginMsg: document.getElementById('loginMsg'),
+      cardLogin: document.getElementById('cardLogin'),
+      cardApp: document.getElementById('cardApp'),
+      userBox: document.getElementById('userBox'),
+      btnRefresh: document.getElementById('btnRefresh'),
+      searchUpcoming: document.getElementById('searchUpcoming'),
+      searchMine: document.getElementById('searchMine'),
+      listUpcoming: document.getElementById('listUpcoming'),
+      listMine: document.getElementById('listMine'),
+      listAway: document.getElementById('listAway'),
+    };
+
+    const state = { token: null, user: null, data: null };
+
+    function setMessage(el, msg, ok=false){
+      el.textContent = msg || '';
+      el.style.color = ok ? 'var(--ok)' : 'var(--muted)';
+    }
+
+    function toggle(el, show){
+      el.classList[show ? 'remove' : 'add']('hidden');
+    }
+
+    function renderUser(){
+      els.userBox.innerHTML = '';
+      if(!state.user){
+        const badge = document.createElement('div');
+        badge.className = 'user';
+        badge.textContent = 'Nicht angemeldet';
+        els.userBox.appendChild(badge);
+        return;
+      }
+      const user = document.createElement('div');
+      user.className = 'user';
+      user.textContent = `${state.user.name} · ${state.user.email || ''}`;
+      const logout = document.createElement('button');
+      logout.className = 'btn small ghost';
+      logout.textContent = 'Logout';
+      logout.addEventListener('click', onLogout);
+      els.userBox.append(user, logout);
+    }
+
+    function callApi(name, ...args){
+      return new Promise(resolve => {
+        const runner = google.script.run
+          .withFailureHandler(err => resolve({ ok:false, error: err && err.message ? err.message : String(err) }))
+          .withSuccessHandler(res => resolve(res || { ok:false, error:'Unbekannte Antwort' }));
+        runner[name](...args);
+      });
+    }
+
+    async function onLogin(ev){
+      ev.preventDefault();
+      const form = new FormData(ev.target);
+      const trainerId = form.get('trainerId');
+      const pin = form.get('pin');
+      setMessage(els.loginMsg, 'Anmeldung läuft...');
+      const res = await callApi('apiLogin', trainerId, pin);
+      if(!res.ok){
+        setMessage(els.loginMsg, res.error || 'Login fehlgeschlagen');
+        return;
+      }
+      state.token = res.token;
+      state.user = res.user;
+      renderUser();
+      toggle(els.cardLogin, false);
+      toggle(els.cardApp, true);
+      await loadData();
+    }
+
+    async function loadData(){
+      setMessage(els.loginMsg, '');
+      const res = await callApi('apiBootstrap', state.token);
+      if(!res.ok){
+        setMessage(els.loginMsg, res.error || 'Fehler beim Laden');
+        return;
+      }
+      state.data = res;
+      renderUpcoming();
+      renderMine();
+      renderAway();
+    }
+
+    async function onLogout(){
+      await callApi('apiLogout', state.token);
+      state.token = null;
+      state.user = null;
+      state.data = null;
+      renderUser();
+      toggle(els.cardApp, false);
+      toggle(els.cardLogin, true);
+      els.loginForm.reset();
+      setMessage(els.loginMsg, 'Abgemeldet.', true);
+    }
+
+    function badge(text, cls=''){ const b = document.createElement('span'); b.className = `badge ${cls}`.trim(); b.textContent = text; return b; }
+
+    function renderUpcoming(){
+      const list = els.listUpcoming;
+      list.innerHTML='';
+      const query = (els.searchUpcoming.value || '').toLowerCase();
+      const items = (state.data?.upcoming || []).filter(it =>
+        !query || `${it.gruppe||''} ${it.ort||''} ${it.datum||''} ${it.start||''}`.toLowerCase().includes(query)
+      );
+      if(!items.length){ list.innerHTML = '<div class="empty">Keine geplanten Trainings.</div>'; return; }
+      items.forEach(tr => {
+        const it = document.createElement('div');
+        it.className = 'item';
+        const main = document.createElement('div');
+        main.className = 'itemMain';
+        main.innerHTML = `<div class="itemTitle">${tr.gruppe||'Training'}</div>
+          <div class="itemSub">${tr.datum||''} · ${tr.start||''}–${tr.ende||''} · ${tr.ort||''}</div>`;
+        const badges = document.createElement('div'); badges.className='badges';
+        badges.append(
+          badge(tr.status || 'geplant', tr.status==='geplant' ? 'ok' : 'warn'),
+          badge(tr.offen_text || 'Planung', tr.offen > 0 ? 'warn' : 'ok')
+        );
+        if(tr.is_unavailable) badges.append(badge('Abgemeldet', 'danger'));
+        main.appendChild(badges);
+        const act = document.createElement('div');
+        act.className='itemActions';
+        const btn = document.createElement('button');
+        btn.className='btn small';
+        btn.textContent = tr.is_unavailable ? 'Abmeldung aufheben' : 'Nicht verfügbar';
+        btn.addEventListener('click', () => toggleUnavailable(tr));
+        act.appendChild(btn);
+        it.append(main, act);
+        list.appendChild(it);
+      });
+    }
+
+    function renderMine(){
+      const list = els.listMine;
+      list.innerHTML='';
+      const query = (els.searchMine.value || '').toLowerCase();
+      const items = (state.data?.mineActive || []).filter(it =>
+        !query || `${it.gruppe||''} ${it.training_datum||''} ${it.start||''}`.toLowerCase().includes(query)
+      );
+      if(!items.length){ list.innerHTML = '<div class="empty">Keine aktiven Einsätze.</div>'; return; }
+      items.forEach(ei => {
+        const it = document.createElement('div'); it.className='item';
+        const main = document.createElement('div'); main.className='itemMain';
+        main.innerHTML = `<div class="itemTitle">${ei.gruppe||'Einsatz'}</div>
+          <div class="itemSub">${ei.training_datum||''} · ${ei.start||''}–${ei.ende||''}</div>`;
+        const badges = document.createElement('div'); badges.className='badges';
+        if(ei.rolle) badges.append(badge(ei.rolle,'ok'));
+        if(ei.attendance) badges.append(badge(ei.attendance,'warn'));
+        main.appendChild(badges);
+        const act = document.createElement('div'); act.className='itemActions';
+        const btn = document.createElement('button'); btn.className='btn small ghost';
+        btn.textContent = 'Austragen';
+        btn.addEventListener('click', () => leaveAssignment(ei));
+        act.appendChild(btn);
+        it.append(main, act);
+        list.appendChild(it);
+      });
+    }
+
+    function renderAway(){
+      const list = els.listAway;
+      list.innerHTML='';
+      const items = state.data?.myUnavailable || [];
+      if(!items.length){ list.innerHTML='<div class="empty">Keine Abmeldungen vorhanden.</div>'; return; }
+      items.forEach(ab => {
+        const it = document.createElement('div'); it.className='item';
+        const main = document.createElement('div'); main.className='itemMain';
+        main.innerHTML = `<div class="itemTitle">${ab.label||ab.training_id}</div>`;
+        const act = document.createElement('div'); act.className='itemActions';
+        const btn = document.createElement('button'); btn.className='btn small';
+        btn.textContent = 'Zurücknehmen';
+        btn.addEventListener('click', () => toggleUnavailable({ training_id: ab.training_id, is_unavailable: true }));
+        act.appendChild(btn);
+        it.append(main, act);
+        list.appendChild(it);
+      });
+    }
+
+    async function toggleUnavailable(tr){
+      const wantsUnavailable = !tr.is_unavailable;
+      const res = wantsUnavailable
+        ? await callApi('apiSetUnavailable', state.token, tr.training_id, '')
+        : await callApi('apiUnsetUnavailable', state.token, tr.training_id);
+      if(!res.ok){ alert(res.error || 'Aktion fehlgeschlagen'); return; }
+      await loadData();
+    }
+
+    async function leaveAssignment(ei){
+      const res = await callApi('apiWithdraw', state.token, ei.einteilung_id);
+      if(!res.ok){ alert(res.error || 'Austragen fehlgeschlagen'); return; }
+      await loadData();
+    }
+
+    function initTabs(){
+      document.querySelectorAll('[data-tab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('[data-panel]').forEach(p => p.classList.add('hidden'));
+          btn.classList.add('active');
+          const panel = document.querySelector(`[data-panel="${btn.dataset.tab}"]`);
+          if(panel) panel.classList.remove('hidden');
+        });
+      });
+    }
+
+    els.loginForm.addEventListener('submit', onLogin);
+    els.btnRefresh.addEventListener('click', loadData);
+    els.searchUpcoming.addEventListener('input', renderUpcoming);
+    els.searchMine.addEventListener('input', renderMine);
+    initTabs();
+  </script>
+</body>
+</html>
