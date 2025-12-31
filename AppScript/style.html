@@ -100,8 +100,8 @@
 
   .btn{
     width:auto;
-    padding:12px 12px;
-    border-radius:14px;
+    padding:9px 12px;
+    border-radius:12px;
     border:1px solid rgba(46,125,50,.28);
     background:linear-gradient(180deg,rgba(118,200,147,.35),rgba(118,200,147,.15));
     color:var(--text);
@@ -112,6 +112,8 @@
     justify-content:center;
     gap:6px;
     white-space:nowrap;
+    line-height:1.2;
+    min-height:38px;
   }
   .btn:hover{filter:brightness(1.06)}
   .btn:disabled{opacity:.55;cursor:not-allowed}
@@ -127,10 +129,12 @@
   }
   .btn.small{
     width:auto;
-    padding:9px 10px;
-    border-radius:12px;
+    padding:7px 9px;
+    border-radius:11px;
     font-weight:800;
     font-size:12px;
+    min-height:0;
+    line-height:1.1;
   }
 
   .grid .btn{width:100%;}
@@ -170,10 +174,11 @@
   @media (max-width:720px){
     .row{flex-direction:column;align-items:stretch;gap:8px;}
     .row .btn{width:100%;}
+    .row h3{width:100%;margin:0;}
   }
 
   .list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
-  .item{
+  .item{ 
     display:flex;justify-content:space-between;gap:12px;align-items:flex-start;
     border:1px solid var(--border2);
     background:rgba(255,255,255,.9);
@@ -188,7 +193,8 @@
 
   @media (max-width:720px){
     .itemActions{width:100%;justify-content:flex-start;gap:6px;}
-    .itemActions .btn{flex:1 1 140px;min-width:0;}
+    .itemActions .btn{flex:1 1 48%;min-width:0;max-width:100%;}
+    .itemActions .btn.small{flex:0 1 46%;}
   }
 
   .badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
