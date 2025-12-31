@@ -99,7 +99,7 @@
   }
 
   .btn{
-    width:100%;
+    width:auto;
     padding:12px 12px;
     border-radius:14px;
     border:1px solid rgba(46,125,50,.28);
@@ -107,6 +107,11 @@
     color:var(--text);
     font-weight:800;
     cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    white-space:nowrap;
   }
   .btn:hover{filter:brightness(1.06)}
   .btn:disabled{opacity:.55;cursor:not-allowed}
@@ -127,6 +132,8 @@
     font-weight:800;
     font-size:12px;
   }
+
+  .grid .btn{width:100%;}
 
   .tabs{
     display:flex;gap:8px;flex-wrap:nowrap;
@@ -160,6 +167,11 @@
     flex-wrap:wrap;
   }
 
+  @media (max-width:720px){
+    .row{flex-direction:column;align-items:stretch;gap:8px;}
+    .row .btn{width:100%;}
+  }
+
   .list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
   .item{
     display:flex;justify-content:space-between;gap:12px;align-items:flex-start;
@@ -173,6 +185,11 @@
   .itemActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;flex:1 1 180px}
   .itemTitle{font-weight:900;font-size:14px}
   .itemSub{color:var(--muted);font-size:12px;margin-top:4px}
+
+  @media (max-width:720px){
+    .itemActions{width:100%;justify-content:flex-start;gap:6px;}
+    .itemActions .btn{flex:1 1 140px;min-width:0;}
+  }
 
   .badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
   .badge{
