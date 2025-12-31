@@ -41,6 +41,12 @@ Im Ordner liegt `Vereinshelfer Google-2.xlsx` als Abbild der Tabellenstruktur:
 - Neue Spalten nur hinzufügen, wenn wirklich nötig.
 - Soft-Delete (z.B. `deleted_at`) bevorzugen statt Zeilen löschen.
 
+#### Trainer-PINs (Hashing)
+- Spalte `pin` im Sheet `TRAINER` enthält jetzt **SHA-256-Hashes** im Format `sha256:<Base64>`.
+- PINs werden serverseitig über `Utilities.computeDigest` gehasht und nur so gespeichert/verglichen.
+- Hashes werden nicht an den Client zurückgegeben.
+- Bestehende Klartext-PINs einmalig migrieren: Im Apps Script Editor `ADMIN_migrateTrainerPinsToHashes()` ausführen; nur nicht-leere und noch nicht gehashte Werte werden überschrieben.
+
 ### IDs
 - Jede Tabelle hat i.d.R. eine ID-Spalte (z.B. `trainer_id`, `training_id`, `einteilung_id`, `abmeldung_id`).
 - IDs werden als String behandelt.

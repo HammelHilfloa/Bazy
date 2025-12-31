@@ -53,9 +53,9 @@ function apiLogin(trainerId, pin) {
   if (!t) return { ok: false, error: "Trainer nicht gefunden." };
   if (!truthy_(t.aktiv)) return { ok: false, error: "Trainer ist nicht aktiv." };
 
-  const expected = String(t.pin || "").trim();
+  const storedPin = String(t.pin || "").trim();
   const got = String(pin || "").trim();
-  if (!expected || expected !== got) return { ok: false, error: "PIN falsch." };
+  if (!verifyPin_(got, storedPin)) return { ok: false, error: "PIN falsch." };
 
   const token = createToken_();
   saveSession_(token, {
@@ -161,12 +161,12 @@ function apiChangeMyPin(token, oldPin, newPin) {
   if (!idx) return { ok:false, error:"Trainer nicht gefunden." };
 
   const cur = String(getCell_(sh, header, idx, "pin") || "").trim();
-  if (String(oldPin || "").trim() !== cur) return { ok:false, error:"Aktuelle PIN ist falsch." };
+  if (!verifyPin_(oldPin, cur)) return { ok:false, error:"Aktuelle PIN ist falsch." };
 
   const np = String(newPin || "").trim();
   if (!/^\d{4,8}$/.test(np)) return { ok:false, error:"Neue PIN muss 4–8 Ziffern haben." };
 
-  setCell_(sh, header, idx, "pin", np);
+  setCell_(sh, header, idx, "pin", hashPin_(np));
   return { ok:true };
 }
 
@@ -774,6 +774,27 @@ function isBlank_(v) {
   return v === null || v === undefined || String(v).trim() === "";
 }
 
+/** ====== PIN Hashing ====== */
+function hashPin_(pin) {
+  const normalized = String(pin || "").trim();
+  if (!normalized) return "";
+  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, normalized, Utilities.Charset.UTF_8);
+  return `sha256:${Utilities.base64Encode(digest)}`;
+}
+
+function isHashedPin_(value) {
+  return typeof value === "string" && value.startsWith("sha256:");
+}
+
+function verifyPin_(input, stored) {
+  const candidate = String(input || "").trim();
+  const expected = String(stored || "").trim();
+  if (!candidate || !expected) return false;
+  if (isHashedPin_(expected)) return hashPin_(candidate) === expected;
+  // Fallback für Legacy-Daten vor der Migration
+  return candidate === expected;
+}
+
 /** ====== Session ====== */
 function createToken_() {
   return Utilities.getUuid();
@@ -897,7 +918,7 @@ function apiAdminListTrainers(token){
     aktiv: String(r.aktiv||"TRUE"),
     is_admin: String(r.is_admin||"FALSE"),
     stundensatz: String(r.stundensatz||"0"),
-    pin: String(r.pin||""),
+    pin: "", // Hash wird nicht an den Client zurückgegeben
   })).sort((a,b)=>a.name.localeCompare(b.name,"de")) };
 }
 
@@ -934,10 +955,38 @@ function apiAdminUpsertTrainer(token, payload){
   set("trainer_id", trainer_id);
   set("name", String(payload.name||""));
   set("email", String(payload.email||""));
-  set("pin", String(payload.pin||""));
+  const newPin = String(payload.pin||"").trim();
+  if (newPin) {
+    set("pin", hashPin_(newPin));
+  }
   set("stundensatz", Number(payload.stundensatz||0));
   set("aktiv", String(payload.aktiv||"TRUE"));
   set("is_admin", String(payload.is_admin||"FALSE"));
 
   return { ok:true };
+}
+
+// Einmaliger Helfer zum Migrieren der bestehenden PINs auf Hash-Werte.
+// Manuell ausführen (z.B. im Apps Script Editor), nicht als öffentliche API gedacht.
+function ADMIN_migrateTrainerPinsToHashes() {
+  const ss = getSS_();
+  const sh = ss.getSheetByName(CFG.SHEETS.TRAINER);
+  if (!sh) throw new Error(`Sheet fehlt: ${CFG.SHEETS.TRAINER}`);
+
+  const { header, values } = readTableWithMeta_(sh, "trainer_id");
+  const pinIdx = header.indexOf("pin");
+  if (pinIdx === -1) throw new Error("Spalte 'pin' nicht gefunden.");
+
+  let updated = 0;
+  for (let r = 1; r < values.length; r++) {
+    const raw = String(values[r][pinIdx] || "").trim();
+    if (!raw || isHashedPin_(raw)) continue;
+    const hashed = hashPin_(raw);
+    if (hashed) {
+      sh.getRange(r + 1, pinIdx + 1).setValue(hashed);
+      updated++;
+    }
+  }
+
+  return { ok: true, updated };
 }
