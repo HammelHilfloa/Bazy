@@ -64,7 +64,7 @@ function apiLogin(trainerId, pin) {
     name: String(t.name || ""),
     is_admin: truthy_(t.is_admin),
     rolle_standard: String(t.rolle_standard || "Trainer"),
-    stundensatz: Number(t.stundensatz || 0),
+    stundensatz: Number(t.stundensatz_eur ?? t.stundensatz ?? 0),
   });
 
   return { ok: true, token, user: getSession_(token) };
@@ -146,7 +146,7 @@ function apiGetMyProfile(token) {
       name: String(t.name || ""),
       email: String(t.email || ""),
       rolle_standard: String(t.rolle_standard || "Trainer"),
-      stundensatz: Number(t.stundensatz || 0),
+      stundensatz: Number(t.stundensatz_eur ?? t.stundensatz ?? 0),
       is_admin: truthy_(t.is_admin),
     }
   };
@@ -917,7 +917,8 @@ function apiAdminListTrainers(token){
     email: String(r.email||""),
     aktiv: String(r.aktiv||"TRUE"),
     is_admin: String(r.is_admin||"FALSE"),
-    stundensatz: String(r.stundensatz||"0"),
+    stundensatz: String(r.stundensatz_eur ?? r.stundensatz ?? "0"),
+    stundensatz_eur: Number(r.stundensatz_eur ?? r.stundensatz ?? 0),
     pin: "", // Hash wird nicht an den Client zurückgegeben
   })).sort((a,b)=>a.name.localeCompare(b.name,"de")) };
 }
@@ -959,7 +960,9 @@ function apiAdminUpsertTrainer(token, payload){
   if (newPin) {
     set("pin", hashPin_(newPin));
   }
-  set("stundensatz", Number(payload.stundensatz||0));
+  const rate = Number(payload.stundensatz||0);
+  set("stundensatz", rate);
+  set("stundensatz_eur", rate);
   set("aktiv", String(payload.aktiv||"TRUE"));
   set("is_admin", String(payload.is_admin||"FALSE"));
 
