@@ -29,6 +29,24 @@
             @yield('content')
         </div>
     </section>
+
+    @hasSection('plan')
+        <section class="card">
+            <div class="card-head">
+                <div>
+                    <p class="eyebrow">Trainingsdetails</p>
+                    <h3>@yield('plan_title', 'Aktueller Trainingsplan')</h3>
+                </div>
+                <div class="tags">
+                    <span class="tag tag-success">sichtbar für Trainer:innen</span>
+                    <span class="tag tag-warning">Pflege nur Admin</span>
+                </div>
+            </div>
+            <div class="card-body">
+                @yield('plan')
+            </div>
+        </section>
+    @endhasSection
 </main>
 
 <nav class="bottom-nav">
