@@ -16,9 +16,13 @@ const CFG = {
   TIMEZONE: Session.getScriptTimeZone(),
 };
 
+let _cachedSs = null;
+
 /** ====== UI ====== */
-function doGet() {
-  return HtmlService.createTemplateFromFile("index")
+function doGet(e) {
+  const template = HtmlService.createTemplateFromFile("index");
+  template.data = sanitizeParams_(e);
+  return template
     .evaluate()
     .setTitle("Vereinshelfer – Trainer")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
@@ -26,6 +30,52 @@ function doGet() {
 
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+function runIncludePreflight() {
+  const files = [
+    "index",
+    "style",
+    "head",
+    "layoutStyles",
+    "header",
+    "footer",
+    "scripts",
+    "appScripts",
+  ];
+
+  const missing = files
+    .map((file) => {
+      const result = tryInclude_(file);
+      return { file, ok: result === true, error: result === true ? null : result };
+    })
+    .filter((res) => !res.ok)
+    .map((res) => ({ file: res.file, error: res.error }));
+
+  return { ok: missing.length === 0, missing };
+}
+
+function tryInclude_(file) {
+  try {
+    HtmlService.createTemplateFromFile(file);
+    return true;
+  } catch (err) {
+    return err && err.message ? err.message : String(err);
+  }
+}
+
+function sanitizeParams_(e) {
+  const raw = (e && e.parameter) ? e.parameter : {};
+  const allowedKeys = ["view"];
+  const cleaned = {};
+
+  allowedKeys.forEach((key) => {
+    if (Object.prototype.hasOwnProperty.call(raw, key)) {
+      cleaned[key] = String(raw[key]);
+    }
+  });
+
+  return cleaned;
 }
 
 /** ====== API ====== */
@@ -586,8 +636,13 @@ function apiUnsetUnavailable(token, trainingId) {
 
 /** ====== Helpers (Sheets) ====== */
 function getSS_() {
-  if (CFG.SPREADSHEET_ID) return SpreadsheetApp.openById(CFG.SPREADSHEET_ID);
-  return SpreadsheetApp.getActiveSpreadsheet();
+  if (_cachedSs) return _cachedSs;
+  if (CFG.SPREADSHEET_ID) {
+    _cachedSs = SpreadsheetApp.openById(CFG.SPREADSHEET_ID);
+  } else {
+    _cachedSs = SpreadsheetApp.getActiveSpreadsheet();
+  }
+  return _cachedSs;
 }
 
 function readTable_(sheet) {
