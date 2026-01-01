@@ -16,9 +16,16 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('trainings')->group(function () {
         Route::get('/', 'TrainingSessionController@index')->name('trainings.index');
-        Route::post('/', 'TrainingSessionController@store')->middleware('can:create,App\\Models\\TrainingSession');
-        Route::put('/{session}', 'TrainingSessionController@update');
-        Route::delete('/{session}', 'TrainingSessionController@destroy');
+        Route::get('/{session}', 'TrainingSessionController@show')->name('trainings.show');
+        Route::post('/', 'TrainingSessionController@store')
+            ->middleware('can:create,App\\Models\\TrainingSession');
+        Route::put('/{session}', 'TrainingSessionController@update')
+            ->middleware('can:update,session');
+        Route::put('/{session}/plan', 'TrainingSessionController@updatePlan')
+            ->name('trainings.plan')
+            ->middleware(['can:update,session', 'role:admin']);
+        Route::delete('/{session}', 'TrainingSessionController@destroy')
+            ->middleware(['can:delete,session', 'role:admin']);
     });
 
     Route::prefix('einteilung')->group(function () {

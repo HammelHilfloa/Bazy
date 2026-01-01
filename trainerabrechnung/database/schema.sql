@@ -70,6 +70,9 @@ CREATE TABLE training_sessions (
     scheduled_date DATE NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
+    plan_details TEXT NULL,
+    planned_by BIGINT UNSIGNED NULL,
+    plan_updated_at TIMESTAMP NULL DEFAULT NULL,
     is_recurring TINYINT(1) NOT NULL DEFAULT 0,
     recurrence_rule VARCHAR(120) NULL,
     max_trainers INT UNSIGNED NOT NULL DEFAULT 2,
@@ -80,7 +83,8 @@ CREATE TABLE training_sessions (
     CONSTRAINT fk_sessions_group FOREIGN KEY (group_id) REFERENCES training_groups(id),
     CONSTRAINT fk_sessions_location FOREIGN KEY (location_id) REFERENCES training_locations(id),
     CONSTRAINT fk_sessions_creator FOREIGN KEY (created_by) REFERENCES users(id),
-    CONSTRAINT fk_sessions_updater FOREIGN KEY (updated_by) REFERENCES users(id)
+    CONSTRAINT fk_sessions_updater FOREIGN KEY (updated_by) REFERENCES users(id),
+    CONSTRAINT fk_sessions_planner FOREIGN KEY (planned_by) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE training_assignments (

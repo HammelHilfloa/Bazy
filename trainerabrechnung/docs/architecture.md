@@ -3,7 +3,7 @@
 ## Module & Verantwortlichkeiten
 - **Auth & Rollen**: `roles`, `users`; Policies für Admin/Trainer. Login via Laravel-Auth (z. B. Breeze/Fortify). HTTPS & Session-Härtung (Secure/CORS/SameSite=Lax).
 - **Trainerprofil**: `trainers`, `trainer_statuses`; Gehaltsstufen pro Status, IBAN/BIC für Abrechnung.
-- **Trainingsverwaltung**: `training_groups`, `training_locations`, `training_sessions`; Admin erstellt/ändert, Trainer:innen sehen nur eigene Slots.
+- **Trainingsverwaltung**: `training_groups`, `training_locations`, `training_sessions`; Admin erstellt/ändert Sessions und pflegt den Trainingsplan (`plan_details`), Trainer:innen sehen Slots und die dazugehörigen Pläne.
 - **Einteilungen & Absagen**: `training_assignments`, `trainer_unavailabilities`, `cancellations`; Trainer:innen können sich einteilen oder Abwesenheit melden, Admin kann umbuchen.
 - **Turniere & Fahrten**: `tournaments`, `tournament_teams`, `tournament_assignments`, `tournament_trips`, `tournament_trip_segments`.
 - **Abrechnung**: `invoices`, `invoice_items`; Halbjahresfilter (H1/H2) erzeugt abrechenbare Einheiten, Summierung nach Lohnsatz.
@@ -12,6 +12,7 @@
 ## Empfohlene Laravel-Umsetzung
 - **Middleware**: `auth`, `verified`, `role:admin` für Verwaltungsrouten.
 - **Policies**: `TrainingSessionPolicy`, `TrainerAvailabilityPolicy`, `InvoicePolicy`.
+- **Trainingsplan**: Feld `plan_details` in `training_sessions` sowie Routen `trainings.show` (sichtbar für alle eingeloggten Nutzer:innen) und `trainings.plan` (nur Admin über Policy/Middleware). `planned_by` protokolliert die letzte Admin-Änderung.
 - **Jobs/Queues**: Generierung der Halbjahresabrechnung als Queue Job (CSV/PDF Export in `storage/app/reports`).
 - **Form Requests**: Validierung für Sessions, Turniere, Abwesenheiten.
 - **Eager Loading**: `with(['group','location','assignments.trainer.user'])` bei Listen, um DB-Zugriffe gering zu halten.

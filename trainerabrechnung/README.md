@@ -23,7 +23,7 @@ Dieses Verzeichnis enthält ein schlankes, auf Laravel ausgerichtetes Startpaket
 
 ## Kernfunktionen
 - **Login nur für registrierte Nutzer:innen**; Admin-Rolle ermöglicht Benutzer- und Trainingsverwaltung.
-- **Trainingsplanung** mit eigenen Status/Gehältern pro Einheit, Einteilung durch Trainer:innen und Abwesenheitsmeldungen.
+- **Trainingsplanung** mit eigenen Status/Gehältern pro Einheit, Einteilung durch Trainer:innen, Abwesenheitsmeldungen und einsehbaren Trainingsdetails pro Einheit.
 - **Abrechnung pro Halbjahr** mit abrechenbaren Einheiten pro Trainer:in (Summen je Status und Lohnsatz).
 - **Turnier- und Fahrtplanung** inklusive Teams, Zuweisungen, Reisekosten und Absagen.
 - **Mobil optimierte Oberfläche** (Landing Page + Layout-Template) für Smartphones.
