@@ -6,6 +6,7 @@
       let allTrainings = [];
       let allMine = [];
       let allUnavailable = [];
+      let currentTrainingCtx = { trainingId: null, planId: null };
 
       const $ = (id) => document.getElementById(id);
 
@@ -613,6 +614,8 @@ if (withAdminButtons) {
         const res = await api("apiTrainingDetails", token, trainingId);
         if (!res.ok) return alert(res.error || "Fehler");
 
+        currentTrainingCtx = { trainingId, planId: res.plan ? res.plan.plan_id : null };
+
         const t = res.training;
         $("trainingSub").textContent = `${t.datum} · ${t.start}–${t.ende} · ${t.gruppe || ""} · ${t.ort || ""}`;
 
@@ -662,7 +665,93 @@ if (withAdminButtons) {
           });
         }
 
+        const planMsg = $("planMsg");
+        if (planMsg) {
+          planMsg.style.display = "none";
+          planMsg.textContent = "";
+        }
+
+        const planTitle = $("trainingPlanTitle");
+        const planContent = $("trainingPlanContent");
+        const planLink = $("trainingPlanLink");
+        const planAdmin = $("trainingPlanAdmin");
+
+        if (res.plan) {
+          planTitle.textContent = res.plan.titel || "(ohne Titel)";
+          planContent.textContent = res.plan.inhalt || "";
+          planContent.style.display = res.plan.inhalt ? "block" : "none";
+          if (res.plan.link) {
+            planLink.style.display = "inline-flex";
+            planLink.href = res.plan.link;
+          } else {
+            planLink.style.display = "none";
+            planLink.removeAttribute("href");
+          }
+        } else {
+          planTitle.textContent = "Noch kein Trainingsplan hinterlegt.";
+          planContent.textContent = "";
+          planContent.style.display = "none";
+          planLink.style.display = "none";
+          planLink.removeAttribute("href");
+        }
+
+        if (sessionUser && sessionUser.is_admin && planAdmin) {
+          planAdmin.style.display = "block";
+          $("planTitleInput").value = res.plan ? res.plan.titel || "" : "";
+          $("planContentInput").value = res.plan ? res.plan.inhalt || "" : "";
+          $("planLinkInput").value = res.plan ? res.plan.link || "" : "";
+          $("btnPlanDelete").style.display = res.plan ? "inline-flex" : "none";
+        } else if (planAdmin) {
+          planAdmin.style.display = "none";
+        }
+
         openModal("trainingModal");
+      }
+
+      async function saveTrainingPlan() {
+        if (!sessionUser || !sessionUser.is_admin) return;
+        const msg = $("planMsg");
+        msg.style.display = "none";
+        msg.textContent = "";
+
+        const payload = {
+          titel: $("planTitleInput").value,
+          inhalt: $("planContentInput").value,
+          link: $("planLinkInput").value,
+        };
+
+        const res = await api("apiAdminUpsertTrainingPlan", token, currentTrainingCtx.trainingId, payload);
+        if (!res.ok) {
+          msg.textContent = res.error || "Fehler";
+          msg.style.display = "block";
+          return;
+        }
+        await openTrainingDetails(currentTrainingCtx.trainingId);
+        msg.textContent = "Gespeichert.";
+        msg.style.display = "block";
+      }
+
+      async function deleteTrainingPlan() {
+        if (!sessionUser || !sessionUser.is_admin) return;
+        const msg = $("planMsg");
+        msg.style.display = "none";
+        msg.textContent = "";
+
+        if (!currentTrainingCtx.planId) {
+          msg.textContent = "Kein Plan zum Löschen.";
+          msg.style.display = "block";
+          return;
+        }
+
+        const res = await api("apiAdminDeleteTrainingPlan", token, currentTrainingCtx.planId);
+        if (!res.ok) {
+          msg.textContent = res.error || "Fehler";
+          msg.style.display = "block";
+          return;
+        }
+        await openTrainingDetails(currentTrainingCtx.trainingId);
+        msg.textContent = "Gelöscht.";
+        msg.style.display = "block";
       }
 
       // ===== Admin Users =====
@@ -823,6 +912,8 @@ if (withAdminButtons) {
         // training modal bindings
         $("trainingClose").addEventListener("click", () => closeModal("trainingModal"));
         $("trainingModal").addEventListener("click", (e) => { if (e.target.id === "trainingModal") closeModal("trainingModal"); });
+        $("btnPlanSave").addEventListener("click", saveTrainingPlan);
+        $("btnPlanDelete").addEventListener("click", deleteTrainingPlan);
 
         // initial state
         setActiveTab("trainings");
