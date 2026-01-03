@@ -11,6 +11,7 @@ const CFG = {
     TRAININGS: "TRAININGS",
     EINTEILUNGEN: "EINTEILUNGEN",
     ABMELDUNGEN: "ABMELDUNGEN",
+    TRAININGSPLAN: "TRAININGSPLAN",
   },
   SESSION_TTL_SECONDS: 60 * 60 * 8, // 8h
   TIMEZONE: Session.getScriptTimeZone(),
@@ -270,7 +271,40 @@ function apiTrainingDetails(token, trainingId) {
     })
     .sort((a,b)=> a.name.localeCompare(b.name, "de"));
 
-  return { ok:true, training: enriched, signups, unavailable };
+  let plan = null;
+  try {
+    const shP = ss.getSheetByName(CFG.SHEETS.TRAININGSPLAN);
+    if (shP) {
+      const plans = readTable_(shP).filter(p =>
+        String(p.training_id) === String(trainingId) &&
+        isBlank_(p.deleted_at)
+      );
+
+      if (plans.length) {
+        plans.sort((a, b) => {
+          const bDate = toDate_(b.updated_at) || toDate_(b.created_at) || new Date(0);
+          const aDate = toDate_(a.updated_at) || toDate_(a.created_at) || new Date(0);
+          return bDate.getTime() - aDate.getTime();
+        });
+        const p = plans[0];
+        plan = {
+          plan_id: String(p.plan_id || ""),
+          training_id: String(p.training_id || ""),
+          titel: String(p.titel || ""),
+          inhalt: String(p.inhalt || ""),
+          link: String(p.link || ""),
+          created_at: p.created_at || "",
+          created_by: String(p.created_by || ""),
+          updated_at: p.updated_at || "",
+          updated_by: String(p.updated_by || ""),
+        };
+      }
+    }
+  } catch (e) {
+    plan = null;
+  }
+
+  return { ok:true, training: enriched, signups, unavailable, plan };
 }
 
 
@@ -419,6 +453,113 @@ function apiAdminSetTrainingStatus(token, trainingId, status, reason) {
   } else {
     setCell_(shT, header, idx, "ausfall_grund", "");
   }
+  return { ok: true };
+}
+
+function apiAdminUpsertTrainingPlan(token, trainingId, payload) {
+  const user = requireSession_(token);
+  if (!user.is_admin) return { ok: false, error: "Nur Admin." };
+
+  const ss = getSS_();
+  const shT = ss.getSheetByName(CFG.SHEETS.TRAININGS);
+  const shP = ss.getSheetByName(CFG.SHEETS.TRAININGSPLAN);
+  if (!shT) return { ok: false, error: `Sheet fehlt: ${CFG.SHEETS.TRAININGS}` };
+  if (!shP) return { ok: false, error: `Sheet fehlt: ${CFG.SHEETS.TRAININGSPLAN}` };
+
+  const trainings = readTable_(shT);
+  const tr = trainings.find(t => String(t.training_id) === String(trainingId));
+  if (!tr) return { ok: false, error: "Training nicht gefunden." };
+
+  const { header, rowIndexByKey } = readTableWithMeta_(shP, "plan_id");
+  const plans = readTable_(shP).filter(p =>
+    String(p.training_id) === String(trainingId) &&
+    isBlank_(p.deleted_at)
+  );
+
+  plans.sort((a, b) => {
+    const bDate = toDate_(b.updated_at) || toDate_(b.created_at) || new Date(0);
+    const aDate = toDate_(a.updated_at) || toDate_(a.created_at) || new Date(0);
+    return bDate.getTime() - aDate.getTime();
+  });
+
+  const existing = plans[0];
+  const now = new Date();
+  const title = String(payload && payload.titel || "");
+  const content = String(payload && payload.inhalt || "");
+  const link = String(payload && payload.link || "");
+
+  let planObj = null;
+
+  if (existing && rowIndexByKey[String(existing.plan_id)]) {
+    const rowIndex = rowIndexByKey[String(existing.plan_id)];
+    setCell_(shP, header, rowIndex, "titel", title);
+    setCell_(shP, header, rowIndex, "inhalt", content);
+    setCell_(shP, header, rowIndex, "link", link);
+    setCell_(shP, header, rowIndex, "updated_at", now);
+    setCell_(shP, header, rowIndex, "updated_by", String(user.trainer_id));
+
+    planObj = {
+      plan_id: String(existing.plan_id || ""),
+      training_id: String(trainingId),
+      titel: title,
+      inhalt: content,
+      link,
+      created_at: existing.created_at || "",
+      created_by: String(existing.created_by || ""),
+      updated_at: now,
+      updated_by: String(user.trainer_id),
+    };
+  } else {
+    const plan_id = "P_" + createShortId_();
+    planObj = {
+      plan_id,
+      training_id: String(trainingId),
+      titel: title,
+      inhalt: content,
+      link,
+      created_at: now,
+      created_by: String(user.trainer_id),
+      updated_at: now,
+      updated_by: String(user.trainer_id),
+      deleted_at: "",
+    };
+
+    appendRow_(shP, planObj);
+  }
+
+  return {
+    ok: true,
+    plan: {
+      plan_id: planObj.plan_id,
+      training_id: planObj.training_id,
+      titel: planObj.titel,
+      inhalt: planObj.inhalt,
+      link: planObj.link,
+      created_at: planObj.created_at,
+      created_by: planObj.created_by,
+      updated_at: planObj.updated_at,
+      updated_by: planObj.updated_by,
+    },
+  };
+}
+
+function apiAdminDeleteTrainingPlan(token, planId) {
+  const user = requireSession_(token);
+  if (!user.is_admin) return { ok: false, error: "Nur Admin." };
+
+  const ss = getSS_();
+  const shP = ss.getSheetByName(CFG.SHEETS.TRAININGSPLAN);
+  if (!shP) return { ok: false, error: `Sheet fehlt: ${CFG.SHEETS.TRAININGSPLAN}` };
+
+  const { header, rowIndexByKey } = readTableWithMeta_(shP, "plan_id");
+  const rowIndex = rowIndexByKey[String(planId)];
+  if (!rowIndex) return { ok: false, error: "Trainingsplan nicht gefunden." };
+
+  const now = new Date();
+  setCell_(shP, header, rowIndex, "deleted_at", now);
+  setCell_(shP, header, rowIndex, "updated_at", now);
+  setCell_(shP, header, rowIndex, "updated_by", String(user.trainer_id));
+
   return { ok: true };
 }
 
