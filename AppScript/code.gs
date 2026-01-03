@@ -37,12 +37,12 @@ function runIncludePreflight() {
   const files = [
     "index",
     "style",
-    "partials/head",
-    "partials/layoutStyles",
-    "partials/header",
-    "partials/footer",
-    "partials/scripts",
-    "partials/appScripts",
+    "head",
+    "layoutStyles",
+    "header",
+    "footer",
+    "scripts",
+    "appScripts",
   ];
 
   const missing = files

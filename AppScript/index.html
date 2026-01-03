@@ -1,9 +1,9 @@
 <!doctype html>
 <html>
-  <?!= include('partials/head'); ?>
+  <?!= include('head'); ?>
   <body>
     <div class="app">
-      <?!= include('partials/header'); ?>
+      <?!= include('header'); ?>
 
       <main>
       <!-- LOGIN -->
@@ -245,46 +245,12 @@
             <div class="muted small" style="margin:0 0 8px;">Nicht verfügbar</div>
             <div class="list" id="trainingUnavailableList"></div>
 
-            <hr style="margin:12px 0; opacity:.25;">
-            <div class="muted small" style="margin:0 0 8px;">Trainingsplan</div>
-            <div class="card inner" id="trainingPlanView" style="margin-bottom:10px;">
-              <div class="item" style="margin:0;">
-                <div class="itemMain">
-                  <div class="itemTitle" id="trainingPlanTitle"></div>
-                  <div class="itemSub" id="trainingPlanContent" style="white-space:pre-line;"></div>
-                </div>
-                <div class="itemActions">
-                  <a class="btn small" id="trainingPlanLink" href="#" target="_blank" rel="noopener" style="display:none;">Link</a>
-                </div>
-              </div>
-              <div class="msg" id="planMsg" style="display:none; margin-top:8px;"></div>
-            </div>
-
-            <div class="card inner" id="trainingPlanAdmin" style="display:none;">
-              <h4 style="margin:0 0 8px;">Trainingsplan bearbeiten</h4>
-              <div class="grid">
-                <label>Titel</label>
-                <input id="planTitleInput" placeholder="Titel des Plans">
-
-                <label>Inhalt</label>
-                <textarea id="planContentInput" rows="4" placeholder="Details, Übungen, Hinweise"></textarea>
-
-                <label>Link</label>
-                <input id="planLinkInput" placeholder="https://...">
-              </div>
-
-              <div class="row" style="margin-top:8px;">
-                <button class="btn" id="btnPlanSave">Speichern</button>
-                <button class="btn ghost danger" id="btnPlanDelete">Löschen</button>
-              </div>
-            </div>
-
           </div>
         </div>
       </div>
 
       
-    <?!= include('partials/footer'); ?>
-    <?!= include('partials/scripts'); ?>
+    <?!= include('footer'); ?>
+    <?!= include('scripts'); ?>
   </body>
 </html>
